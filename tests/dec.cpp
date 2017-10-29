@@ -21,10 +21,11 @@ int main()
     for (int i = 0; i < buf.size(); ++i)
     {
         auto inst = dec.Decode(i);
-        assert(inst.m_name == ans[i]);
-        assert(inst.m_rd == 3);
-        assert(inst.m_rs1 == 22);
-        assert(inst.m_rs2 == 7);
+        assert(inst->GetName() == ans[i]);
+        assert(inst->GetOperand(0).GetRegNum() == 3);
+        assert(inst->GetOperand(1).GetRegNum() == 22);
+        assert(inst->GetOperand(2).GetRegNum() == 7);
+        delete inst;
     }
     return 0;
 }
