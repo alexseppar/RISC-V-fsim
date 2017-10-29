@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <cassert>
 
-enum InstName {
-    INVALID_N,
+enum class InstName {
+    INVALID,
     ADD,
     SUB,
     OR,
@@ -30,8 +30,8 @@ enum InstName {
     LUI*/
 };
 
-enum InstFormat {
-    INVALID_F,
+enum class InstFormat {
+    INVALID,
     RT,
     IT,
     ST,
@@ -40,8 +40,8 @@ enum InstFormat {
 
 struct Inst {
 
-    InstName m_name = InstName::INVALID_N;
-    InstFormat m_format = InstFormat::INVALID_F;
+    InstName m_name = InstName::INVALID;
+    InstFormat m_format = InstFormat::INVALID;
 
     uint8_t m_rd = 0,
             m_rs1 = 0,

@@ -1,4 +1,4 @@
-#include "decoder.h"
+#include "decoder.h" 
 
 Inst Decoder::Decode(uint32_t pos) const
 {
@@ -19,36 +19,36 @@ Inst Decoder::Decode(uint32_t pos) const
             switch (funct3)
             {
                 case 0b0:
-                    newInst.m_name = funct7 == 0 ? ADD : 
-                                    (funct7 == 32 ? SUB : MUL);
+                    newInst.m_name = funct7 == 0 ? InstName::ADD : 
+                                    (funct7 == 32 ? InstName::SUB : InstName::MUL);
                     return newInst;
 
                 case 0b010:
-                    newInst.m_name = SLT;
+                    newInst.m_name = InstName::SLT;
                     return newInst;
 
                 case 0b100:
-                    newInst.m_name = XOR;
+                    newInst.m_name = InstName::XOR;
                     return newInst;
 
                 case 0b101:
-                    newInst.m_name = funct7 ? SRA : SRL;
+                    newInst.m_name = funct7 ? InstName::SRA : InstName::SRL;
                     return newInst;
 
                 case 0b111:
-                    newInst.m_name = AND;
+                    newInst.m_name = InstName::AND;
                     return newInst;
 
                 case 0b011:
-                    newInst.m_name = SLTU;
+                    newInst.m_name = InstName::SLTU;
                     return newInst;
 
                 case 0b001:
-                    newInst.m_name = SLL;
+                    newInst.m_name = InstName::SLL;
                     return newInst;
 
                 case 0b110:
-                    newInst.m_name = OR;
+                    newInst.m_name = InstName::OR;
                     return newInst;
                 
                 default:
