@@ -1,11 +1,12 @@
 #ifndef INST_H
 #define INST_H
 
-#include <cstdint>
 #include <cassert>
+#include <cstdint>
 #include <vector>
 
-enum class OpType {
+enum class OpType
+{
     INVALID,
     REG,
     IMM
@@ -13,19 +14,20 @@ enum class OpType {
 
 class GenInst;
 
-class Operand final {
-    private:
-    
+class Operand final
+{
+private:
     OpType m_type;
-    
-    union {
+
+    union
+    {
         uint8_t m_reg;
 
         uint32_t m_imm;
     };
-    
+
     friend GenInst;
-    
+
     Operand(OpType type, uint32_t val) : m_type(type)
     {
         if (type == OpType::REG)
@@ -36,32 +38,34 @@ class Operand final {
         {
             m_imm = val;
         }
-        
     }
-    
-    public:
 
+public:
     Operand() = delete;
 
-    OpType GetType() const
+    OpType
+    GetType() const
     {
         return m_type;
     }
 
-    uint32_t GetImm() const
+    uint32_t
+    GetImm() const
     {
         assert(m_type == OpType::IMM);
         return m_imm;
     }
 
-    uint8_t GetRegNum() const
+    uint8_t
+    GetRegNum() const
     {
         assert(m_type == OpType::REG);
         return m_reg;
     }
 };
 
-enum class InstName {
+enum class InstName
+{
     INVALID,
     ADD,
     SUB,
@@ -86,7 +90,8 @@ enum class InstName {
     LUI*/
 };
 
-enum class InstFormat {
+enum class InstFormat
+{
     INVALID,
     RT,
     IT,
@@ -94,68 +99,75 @@ enum class InstFormat {
     UT
 };
 
-class Inst final {
-    private:
-    
+class Inst final
+{
+private:
     InstName m_name;
 
     InstFormat m_format;
-    
-    std::vector<Operand> m_operands; 
-    
+
+    std::vector<Operand> m_operands;
+
     friend GenInst;
-    
-    public:
-    
-    InstName GetName() const
+
+public:
+    InstName
+    GetName() const
     {
         return m_name;
     }
-    
-    InstFormat GetFormat() const
+
+    InstFormat
+    GetFormat() const
     {
         return m_format;
     }
 
-    const Operand& GetOperand(uint8_t idx) const
+    const Operand &
+    GetOperand(uint8_t idx) const
     {
         return m_operands.at(idx);
     }
 };
 
-class GenInst final {
-    Inst* m_inst;
+class GenInst final
+{
+    Inst *m_inst;
 
-    public:
-    
-    operator Inst*() { return m_inst; }
-    
+public:
+    operator Inst *()
+    {
+        return m_inst;
+    }
+
     GenInst(InstName name, InstFormat format)
     {
-        //What should we do if name or format is INVALID?
+        // What should we do if name or format is INVALID?
         assert(format != InstFormat::INVALID);
         assert(name != InstName::INVALID);
-        m_inst = new Inst;
-        m_inst->m_name = name;
+        m_inst           = new Inst;
+        m_inst->m_name   = name;
         m_inst->m_format = format;
     }
 
-    GenInst& L(uint32_t imm)
+    GenInst &
+    L(uint32_t imm)
     {
         m_inst->m_operands.push_back(Operand(OpType::IMM, imm));
         return *this;
     }
-    
 
-    GenInst& R(uint8_t reg)
+    GenInst &
+    R(uint8_t reg)
     {
         assert(reg < 32);
         m_inst->m_operands.push_back(Operand(OpType::REG, reg));
         return *this;
     }
-    
+
     ~GenInst()
-    {}
+    {
+    }
 };
 
 #endif
