@@ -11,7 +11,7 @@ uint32_t State::GetReg(ir::Reg reg) const
     return (reg) ? regs_[reg] : 0u;
 }
 
-void State::SetReg(ir::Reg reg, ir::Imm val)
+void State::SetReg(ir::Reg reg, uint32_t val)
 {
     assert(reg < 32 && "Invalid register number");
     regs_[reg] = val;
@@ -32,7 +32,9 @@ void State::SetPC(uint32_t pc)
 
 void State::Dump(std::ostream &ostream) const
 {
+    SaveOstreamFlags save_flags(ostream);
     ostream << "Processor state:" << std::endl;
+    ostream << std::setfill('0') << std::setw(8) << std::right << std::hex;
     for (uint8_t i = 1; i < 32; ++i)
     {
         ostream << ir::Reg(i);
@@ -65,14 +67,11 @@ void Sim::Execute()
                       << std::right << cmd << std::endl;
             std::cout << "Instruction:" << std::endl << inst << std::endl;
             std::cout << "Execution:" << std::endl;
-            (*isa::cmd_desc[static_cast<uint8_t>(inst.GetCmd())].exec_func)(&inst,
-                                                                            &state_);
+            (*isa::GetCmdDesc(inst.GetCmd()).exec_func)(&inst, &state_);
         }
         catch (SimException &e)
         {
-            SaveOstreamFlags(std::cout);
-            std::cout << e.what() << ':' << std::endl;
-            std::cout << std::hex << cmd << std::endl;
+            std::cout << e.what() << std::endl;
             continue;
         }
     }

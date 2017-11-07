@@ -1,37 +1,44 @@
 #include "decoder.h"
 #include "common.h"
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 
 namespace sim
 {
+uint32_t SignExtend(uint32_t imm, uint8_t n)
+{
+    assert(n < 32);
+    uint32_t mask = (~0u) << n;
+    return (imm & (1u << n)) ? (imm | mask) : imm;
+}
+
 Decoder::Decoder()
 {
     std::cerr << "Decoder initialization started" << std::endl;
-    // setup opcode_format_ hash table
-    for (size_t i = 0; i < ArrSize(isa::opcode_desc); ++i)
+    // setup op_fmt_ hash table
+    for (size_t i = 0; i < isa::GetOpcodesNum(); ++i)
     {
-        auto res = opcode_format_.insert(
-            {isa::opcode_desc[i].opcode, isa::opcode_desc[i].format});
-        if (!res.second)
+        const isa::OpcodeDesc &op_desc = isa::GetOpcodeDesc(i);
+        bool res = op_fmt_.insert({op_desc.opcode, op_desc.format}).second;
+        if (!res)
         {
-            std::cerr << "Warning: opcode_desc has same opcodes "
-                      << isa::opcode_desc[i].opcode << std::endl;
+            std::cerr << "Warning: ISA description has same opcodes: "
+                      << op_desc.opcode << std::endl;
         }
     }
     // setup opcode_cmd_ hash table
-    for (size_t i = 0; i < ArrSize(isa::cmd_desc); ++i)
+    for (size_t i = 0; i < isa::GetCmdsNum(); ++i)
     {
-        uint16_t packed_opcode =
-            (isa::cmd_desc[i].funct7 << 8) | (isa::cmd_desc[i].funct3 << 5) |
-            isa::opcode_desc[static_cast<uint8_t>(isa::cmd_desc[i].opcode)].opcode;
-        auto res = opcode_cmd_.insert({packed_opcode, static_cast<isa::Cmd>(i)});
+        const isa::CmdDesc &cmd_desc = isa::GetCmdDesc(i);
+        uint16_t cmd = (cmd_desc.funct7 << 8) | (cmd_desc.funct3 << 5) |
+                       isa::GetOpcodeDesc(cmd_desc.opcode).opcode;
+        auto res = op_cmd_.insert({cmd, static_cast<isa::Cmd>(i)});
         if (!res.second)
         {
-            std::cerr
-                << "Warning: cmd_desc has the same attributes for instructions "
-                << isa::cmd_desc[static_cast<uint8_t>(res.first->second)].name
-                << " and " << isa::cmd_desc[i].name << std::endl;
+            std::cerr << "Warning: ISA description has same instructions: "
+                      << isa::GetCmdDesc(res.first->second).name << " and "
+                      << cmd_desc.name << std::endl;
         }
     }
     std::cerr << "Decoder initialization finished" << std::endl;
@@ -39,15 +46,15 @@ Decoder::Decoder()
 
 isa::Cmd Decoder::GetCmd(uint8_t opcode, uint8_t funct3, uint8_t funct7) const
 {
-    uint16_t packed_opcode = (funct7 << 8) | (funct3 << 5) | (opcode);
-    auto     op_cmd_it     = opcode_cmd_.find(packed_opcode);
-    if (op_cmd_it == opcode_cmd_.end())
+    uint16_t cmd = (funct7 << 8) | (funct3 << 5) | (opcode);
+    auto cmd_it = op_cmd_.find(cmd);
+    if (cmd_it == op_cmd_.end())
     {
-        throw SimException("Can not recognize instruction");
+        throw SimException("Can not find instruction by opcode, funct3, funct7");
     }
     else
     {
-        return op_cmd_it->second;
+        return cmd_it->second;
     }
 }
 
@@ -60,10 +67,10 @@ ir::Inst Decoder::Decode(uint32_t command) const
         throw SimException("Packed instructions are not supported!");
     }
     // step 2: get opcode and instruction format
-    uint8_t        opcode = (command & ((1u << 7) - 1)) >> 2;
+    uint8_t opcode = (command & ((1u << 7) - 1)) >> 2;
     isa::CmdFormat format;
-    auto           op_fmt_it = opcode_format_.find(opcode);
-    if (op_fmt_it == opcode_format_.end())
+    auto op_fmt_it = op_fmt_.find(opcode);
+    if (op_fmt_it == op_fmt_.end())
     {
         throw SimException("Opcode is not supported");
     }
@@ -87,12 +94,12 @@ ir::Inst Decoder::Decode(uint32_t command) const
         memcpy((void *)&fmt, (void *)&command, 4);
         isa::Cmd cmd = GetCmd(opcode, fmt.funct3);
         // need to do some checks for shift instructions
-        uint32_t imm = fmt.imm;
+        uint32_t imm = SignExtend(fmt.imm, 11);
         if (cmd == isa::Cmd::SLLI)
         {
             if ((imm >> 5) != 0u)
             {
-                throw SimException("SLLI should contain leading zeroes");
+                throw SimException("SLLI: incorrect immediate");
             }
         }
         else if (cmd == isa::Cmd::SRLI || cmd == isa::Cmd::SRAI)
@@ -109,7 +116,7 @@ ir::Inst Decoder::Decode(uint32_t command) const
             }
             else
             {
-                throw SimException("Can not select between SRLI and SRAI");
+                throw SimException("SRLI/SRAI: incorrect immediate");
             }
         }
         return ir::GenInst<isa::CmdFormat::I>(cmd, fmt.rd, fmt.rs1, imm);
@@ -120,7 +127,7 @@ ir::Inst Decoder::Decode(uint32_t command) const
         isa::SFormat fmt;
         memcpy((void *)&fmt, (void *)&command, 4);
         isa::Cmd cmd = GetCmd(opcode, fmt.funct3);
-        uint32_t imm = ((uint32_t)fmt.imm2 << 5) | fmt.imm1;
+        uint32_t imm = SignExtend(((uint32_t)fmt.imm2 << 5) | fmt.imm1, 11);
         if (format == isa::CmdFormat::S)
         {
             return ir::GenInst<isa::CmdFormat::S>(cmd, imm, fmt.rs1, fmt.rs2);
@@ -142,12 +149,15 @@ ir::Inst Decoder::Decode(uint32_t command) const
         }
         if (format == isa::CmdFormat::J)
         {
-            return ir::GenInst<isa::CmdFormat::J>(cmd, fmt.rd, fmt.imm);
+            uint32_t imm = (int)(SignExtend(fmt.imm, 19)) * 2;
+            return ir::GenInst<isa::CmdFormat::J>(cmd, fmt.rd, imm);
         }
     }
     else
     {
-        throw SimException("Unsupported format");
+        throw SimException("Decoding of this format is not implemented");
     }
+    // should not execute, need to suppress g++ warning
+    return ir::Inst(static_cast<isa::Cmd>(0), 0, 0, 0, 0);
 }
 }

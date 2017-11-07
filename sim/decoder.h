@@ -9,8 +9,8 @@ namespace sim
 class Decoder
 {
 private:
-    std::unordered_map<uint8_t, isa::CmdFormat> opcode_format_;
-    std::unordered_map<uint16_t, isa::Cmd>      opcode_cmd_;
+    std::unordered_map<uint8_t, isa::CmdFormat> op_fmt_;
+    std::unordered_map<uint16_t, isa::Cmd> op_cmd_;
 
     isa::Cmd GetCmd(uint8_t opcode, uint8_t funct3 = 0, uint8_t funct7 = 0) const;
 

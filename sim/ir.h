@@ -3,6 +3,7 @@
 
 #include "isa_desc.h"
 #include <cassert>
+#include <iostream>
 #include <type_traits>
 
 namespace ir
@@ -49,8 +50,8 @@ std::ostream &operator<<(std::ostream &ostream, Imm imm);
 class Inst
 {
 private:
-    Imm      imm_;
-    Reg      rs1_, rs2_, rd_;
+    Imm imm_;
+    Reg rs1_, rs2_, rd_;
     isa::Cmd cmd_;
 
 public:
@@ -92,11 +93,12 @@ public:
     }
     isa::Opcode GetOpcode() const
     {
-        return isa::GetOpcode(cmd_);
+        return isa::GetCmdDesc(cmd_).opcode;
+        ;
     }
     isa::CmdFormat GetCmdFormat() const
     {
-        return isa::GetCmdFormat(cmd_);
+        return isa::GetOpcodeDesc(GetOpcode()).format;
     }
     void Dump(std::ostream &ostream) const;
 };

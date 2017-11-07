@@ -22,7 +22,7 @@ std::ostream &operator<<(std::ostream &ostream, Reg reg)
 void Imm::Dump(std::ostream &ostream) const
 {
     SaveOstreamFlags save_flags(ostream);
-    ostream << "i:" << std::setfill('0') << std::setw(8) << std::right << std::hex
+    ostream << "i:" << std::setfill('0') << std::setw(5) << std::right << std::hex
             << imm_;
 }
 
@@ -36,8 +36,8 @@ std::ostream &operator<<(std::ostream &ostream, Imm imm)
 void Inst::Dump(std::ostream &ostream) const
 {
     SaveOstreamFlags save_flags(ostream);
-    ostream << std::setw(7) << std::left << std::setfill(' ')
-            << isa::cmd_desc[static_cast<uint8_t>(cmd_)].name;
+    ostream << std::setfill(' ') << std::setw(7) << std::left
+            << isa::GetCmdDesc(cmd_).name;
     switch (GetCmdFormat())
     {
     case isa::CmdFormat::R:

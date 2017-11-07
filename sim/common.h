@@ -1,7 +1,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <string>
@@ -30,7 +29,7 @@ public:
     }
 
 private:
-    std::ostream &     ostream_;
+    std::ostream &ostream_;
     std::ios::fmtflags flags_;
 };
 

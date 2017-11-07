@@ -16,10 +16,10 @@ private:
     // TODO: system registers
 public:
     uint32_t GetReg(ir::Reg reg) const;
-    void     SetReg(ir::Reg reg, ir::Imm val);
+    void SetReg(ir::Reg reg, uint32_t val);
     uint32_t GetPC() const;
-    void     SetPC(uint32_t pc);
-    void     Dump(std::ostream &ostream) const;
+    void SetPC(uint32_t pc);
+    void Dump(std::ostream &ostream) const;
 };
 
 std::ostream &operator<<(std::ostream &ostream, const State &state);
@@ -27,8 +27,8 @@ std::ostream &operator<<(std::ostream &ostream, const State &state);
 class Sim
 {
 private:
-    State                 state_;
-    Decoder               decoder_;
+    State state_;
+    Decoder decoder_;
     std::vector<uint32_t> commands_;   // TODO: use elf loader in future
 public:
     Sim(const std::vector<uint32_t> &commands);
