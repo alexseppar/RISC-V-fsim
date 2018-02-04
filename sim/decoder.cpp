@@ -1,8 +1,7 @@
 #include "decoder.h"
 #include "common.h"
+#include <cstdio>
 #include <cstring>
-#include <iomanip>
-#include <iostream>
 
 namespace sim
 {
@@ -15,46 +14,81 @@ uint32_t SignExtend(uint32_t imm, uint8_t n)
 
 Decoder::Decoder()
 {
-    std::cerr << "Decoder initialization started" << std::endl;
-    // setup op_fmt_ hash table
+    fprintf(log, "Decoder initialization started\n");
+    // setup opc_to_fmt_ table
+    opc_to_fmt_.fill(isa::CmdFormat::UNDEFINED);
     for (size_t i = 0; i < isa::GetOpcodesNum(); ++i)
     {
         const isa::OpcodeDesc &op_desc = isa::GetOpcodeDesc(i);
-        bool res = op_fmt_.insert({op_desc.opcode, op_desc.format}).second;
-        if (!res)
-        {
-            std::cerr << "Warning: ISA description has same opcodes: "
-                      << op_desc.opcode << std::endl;
-        }
+        assert(op_desc.opcode < 32);
+        if (opc_to_fmt_[op_desc.opcode] != isa::CmdFormat::UNDEFINED)
+            fprintf(log, "Warning: ISA opcode description has same opcodes\n");
+        opc_to_fmt_[op_desc.opcode] = op_desc.format;
     }
-    // setup opcode_cmd_ hash table
+    // setup opc_funct3_[funct7_]to_cmd_ tables
+    opc_funct3_to_cmd_.fill(static_cast<uint8_t>(isa::Cmd::UNDEFINED));
     for (size_t i = 0; i < isa::GetCmdsNum(); ++i)
     {
         const isa::CmdDesc &cmd_desc = isa::GetCmdDesc(i);
-        uint16_t cmd = (cmd_desc.funct7 << 8) | (cmd_desc.funct3 << 5) |
-                       isa::GetOpcodeDesc(cmd_desc.opcode).opcode;
-        auto res = op_cmd_.insert({cmd, static_cast<isa::Cmd>(i)});
-        if (!res.second)
+        uint8_t opcode = isa::GetOpcodeDesc(cmd_desc.opcode).opcode;
+        assert(opcode < 32);
+        uint16_t opc_funct3 = (cmd_desc.funct3 << 5) | opcode;
+        isa::CmdFormat format = opc_to_fmt_[opcode];
+        assert(format != isa::CmdFormat::UNDEFINED);
+        if (format == isa::CmdFormat::R)
         {
-            std::cerr << "Warning: ISA description has same instructions: "
-                      << isa::GetCmdDesc(res.first->second).name << " and "
-                      << cmd_desc.name << std::endl;
+            // this format uses funct7
+            if (opc_funct3_to_cmd_[opc_funct3] == static_cast<uint8_t>(isa::Cmd::UNDEFINED))
+            {
+                // first use of opc_funct3
+                opc_funct3_to_cmd_[opc_funct3] = funct7_to_cmd_.size();
+                std::array<isa::Cmd, 128> funct7;
+                funct7.fill(isa::Cmd::UNDEFINED);
+                funct7_to_cmd_.push_back(std::move(funct7));
+            }
+            if (funct7_to_cmd_[opc_funct3_to_cmd_[opc_funct3]][cmd_desc.funct7] !=
+                isa::Cmd::UNDEFINED)
+                fprintf(log, "Warning: cmd %s has opcode, funct3, funct7 collision\n",
+                        cmd_desc.name);
+            funct7_to_cmd_[opc_funct3_to_cmd_[opc_funct3]][cmd_desc.funct7] =
+                static_cast<isa::Cmd>(i);
+        }
+        else
+        {
+            if (opc_funct3_to_cmd_[opc_funct3] != static_cast<uint8_t>(isa::Cmd::UNDEFINED))
+                fprintf(log, "Warning: cmd %s has opcode, funct3 collision\n", cmd_desc.name);
+            opc_funct3_to_cmd_[opc_funct3] = i;
         }
     }
-    std::cerr << "Decoder initialization finished" << std::endl;
+    funct7_to_cmd_.shrink_to_fit();
+    fprintf(log, "Decoder initialization finished\n");
+}
+
+isa::Cmd Decoder::GetCmd(uint8_t opcode, uint8_t funct3) const
+{
+    uint8_t op_funct3 = (funct3 << 5) | opcode;
+    isa::Cmd cmd = static_cast<isa::Cmd>(opc_funct3_to_cmd_[op_funct3]);
+    if (cmd == isa::Cmd::UNDEFINED)
+    {
+        throw SimException("Can not find instruction by opcode, funct3");
+    }
+    else
+    {
+        return cmd;
+    }
 }
 
 isa::Cmd Decoder::GetCmd(uint8_t opcode, uint8_t funct3, uint8_t funct7) const
 {
-    uint16_t cmd = (funct7 << 8) | (funct3 << 5) | (opcode);
-    auto cmd_it = op_cmd_.find(cmd);
-    if (cmd_it == op_cmd_.end())
+    uint8_t op_funct3 = (funct3 << 5) | opcode;
+    isa::Cmd cmd = funct7_to_cmd_[opc_funct3_to_cmd_[op_funct3]][funct7];
+    if (cmd == isa::Cmd::UNDEFINED)
     {
         throw SimException("Can not find instruction by opcode, funct3, funct7");
     }
     else
     {
-        return cmd_it->second;
+        return cmd;
     }
 }
 
@@ -68,15 +102,10 @@ ir::Inst Decoder::Decode(uint32_t command) const
     }
     // step 2: get opcode and instruction format
     uint8_t opcode = (command & ((1u << 7) - 1)) >> 2;
-    isa::CmdFormat format;
-    auto op_fmt_it = op_fmt_.find(opcode);
-    if (op_fmt_it == op_fmt_.end())
+    isa::CmdFormat format = opc_to_fmt_[opcode];
+    if (format == isa::CmdFormat::UNDEFINED)
     {
         throw SimException("Opcode is not supported");
-    }
-    else
-    {
-        format = op_fmt_it->second;
     }
     // step 3: use instruction format to decode instruction
     // R format
@@ -93,8 +122,9 @@ ir::Inst Decoder::Decode(uint32_t command) const
         isa::IFormat fmt;
         memcpy((void *)&fmt, (void *)&command, 4);
         isa::Cmd cmd = GetCmd(opcode, fmt.funct3);
-        // need to do some checks for shift instructions
-        uint32_t imm = SignExtend(fmt.imm, 11);
+        uint32_t imm = fmt.imm;
+        // process some special cases
+        // shift instructions
         if (cmd == isa::Cmd::SLLI)
         {
             if ((imm >> 5) != 0u)
@@ -118,6 +148,31 @@ ir::Inst Decoder::Decode(uint32_t command) const
             {
                 throw SimException("SRLI/SRAI: incorrect immediate");
             }
+        }
+        // ECALL, EBREAK instructions
+        else if (cmd == isa::Cmd::ECALL || cmd == isa::Cmd::EBREAK)
+        {
+            if (fmt.rs1 || fmt.rd)
+            {
+                throw SimException("ECALL/EBREAK: rs1, rd are not zero");
+            }
+            if (imm == 0u)
+            {
+                cmd = isa::Cmd::ECALL;
+            }
+            else if (imm == 1u)
+            {
+                cmd = isa::Cmd::EBREAK;
+            }
+            else
+            {
+                throw SimException("ECALL/EBREAK: incorrect immediate");
+            }
+        }
+        // other instructions
+        else
+        {
+            imm = SignExtend(fmt.imm, 11);
         }
         return ir::GenInst<isa::CmdFormat::I>(cmd, fmt.rd, fmt.rs1, imm);
     }
@@ -153,11 +208,8 @@ ir::Inst Decoder::Decode(uint32_t command) const
             return ir::GenInst<isa::CmdFormat::J>(cmd, fmt.rd, imm);
         }
     }
-    else
-    {
-        throw SimException("Decoding of this format is not implemented");
-    }
+    throw SimException("Decoding of this format is not implemented");
     // should not execute, need to suppress g++ warning
-    return ir::Inst(static_cast<isa::Cmd>(0), 0, 0, 0, 0);
+    return ir::Inst(isa::Cmd::UNDEFINED, 0, 0, 0, 0);
 }
 }

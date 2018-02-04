@@ -58,7 +58,14 @@ const CmdDesc cmd_desc[] =
     {"SRA",    &ExecDummy, Opcode::OP,     0b101, 0b0100000},
     {"OR",     &ExecDummy, Opcode::OP,     0b110, 0b0000000},
     {"AND",    &ExecDummy, Opcode::OP,     0b111, 0b0000000},
-    // TODO: ECALL, EBREAK, CSR insts
+    {"ECALL",  &ExecDummy, Opcode::SYSTEM, 0b000},
+    {"EBREAK", &ExecDummy, Opcode::SYSTEM, 0b000},
+    {"CSRRW",  &ExecDummy, Opcode::SYSTEM, 0b001},
+    {"CSRRS",  &ExecDummy, Opcode::SYSTEM, 0b010},
+    {"CSRRC",  &ExecDummy, Opcode::SYSTEM, 0b011},
+    {"CSRRWI", &ExecDummy, Opcode::SYSTEM, 0b101},
+    {"CSRRSI", &ExecDummy, Opcode::SYSTEM, 0b110},
+    {"CSRRCI", &ExecDummy, Opcode::SYSTEM, 0b111},
     // RV32M standard extension
     {"MUL",    &ExecDummy, Opcode::OP,     0b000, 0b0000001},
     {"MULH",   &ExecDummy, Opcode::OP,     0b001, 0b0000001},

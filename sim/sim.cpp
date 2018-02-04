@@ -1,6 +1,5 @@
 #include "sim.h"
 #include "common.h"
-#include <iomanip>
 
 namespace sim
 {
@@ -15,8 +14,6 @@ void State::SetReg(ir::Reg reg, uint32_t val)
 {
     assert(reg < 32 && "Invalid register number");
     regs_[reg] = val;
-    // if (options::LogTrace)
-    //    std::cerr << reg << ": " << val << std::endl;
 }
 
 uint32_t State::GetPC() const
@@ -26,28 +23,18 @@ uint32_t State::GetPC() const
 
 void State::SetPC(uint32_t pc)
 {
-    // there we can implement observation of hot code for JIT purposes
     pc_ = pc;
 }
 
-void State::Dump(std::ostream &ostream) const
+void State::Dump(FILE *f) const
 {
-    SaveOstreamFlags save_flags(ostream);
-    ostream << "Processor state:" << std::endl;
-    ostream << std::setfill('0') << std::setw(8) << std::right << std::hex;
-    for (uint8_t i = 1; i < 32; ++i)
+    fprintf(f, "Processor state:\n");
+    for (uint8_t i = 0; i < 32; ++i)
     {
-        ostream << ir::Reg(i);
-        ostream << ": ";
-        ostream << regs_[i] << std::endl;
+        ir::Reg(i).Dump(f);
+        fprintf(f, ": 0x%08X\n", regs_[i]);
     }
-    ostream << "PC: " << pc_ << std::endl;
-}
-
-std::ostream &operator<<(std::ostream &ostream, const State &state)
-{
-    state.Dump(ostream);
-    return ostream;
+    fprintf(f, "PC: 0x%08X\n", pc_);
 }
 
 // Sim
@@ -63,10 +50,10 @@ void Sim::Execute()
         try
         {
             ir::Inst inst = decoder_.Decode(cmd);
-            std::cout << "Command: " << std::setw(8) << std::setfill('0') << std::hex
-                      << std::right << cmd << std::endl;
-            std::cout << "Instruction:" << std::endl << inst << std::endl;
-            std::cout << "Execution:" << std::endl;
+            fprintf(log, "Command: 0x%08X\n", cmd);
+            fprintf(log, "Instruction:\n");
+            inst.Dump(log);
+            fprintf(log, "Execution:\n");
             (*isa::GetCmdDesc(inst.GetCmd()).exec_func)(&inst, &state_);
         }
         catch (SimException &e)

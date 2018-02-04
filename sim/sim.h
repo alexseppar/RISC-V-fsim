@@ -3,7 +3,7 @@
 
 #include "decoder.h"
 #include <cstdint>
-#include <iostream>
+#include <cstdio>
 #include <vector>
 
 namespace sim
@@ -19,10 +19,8 @@ public:
     void SetReg(ir::Reg reg, uint32_t val);
     uint32_t GetPC() const;
     void SetPC(uint32_t pc);
-    void Dump(std::ostream &ostream) const;
+    void Dump(FILE *f) const;
 };
-
-std::ostream &operator<<(std::ostream &ostream, const State &state);
 
 class Sim
 {

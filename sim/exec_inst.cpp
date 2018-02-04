@@ -1,6 +1,6 @@
 #include "exec_inst.h"
 #include "sim.h"
-#include <iostream>
+#include <cstdio>
 
 #define INC_PC() (state->SetPC(state->GetPC() + 4))
 #define RS1 (state->GetReg(inst->GetRs1))
@@ -10,7 +10,7 @@
 
 void ExecDummy(const ir::Inst *inst, sim::State *state)
 {
-    std::cerr << "This instruction is not implemented yet" << std::endl;
+    fprintf(stderr, "This instruction is not implemented yet\n");
 }
 
 /*

@@ -11,7 +11,9 @@ namespace isa
 // Command format description
 enum class CmdFormat: uint8_t
 {
-    R, I, S, U, B, J
+    R, I, S, U, B, J,
+    // stub format
+    UNDEFINED
 };
 
 // Declare only base RISC-V instruction formats
@@ -34,7 +36,7 @@ struct IFormat
     uint8_t rd     :5;
     uint8_t funct3 :3;
     uint8_t rs1    :5;
-    uint32_t imm   :12;
+    uint16_t imm   :12;
 }__attribute__((packed));
 
 struct SFormat
@@ -69,7 +71,9 @@ enum class Opcode : uint8_t
     OP,
     SYSTEM,
     AUIPC,
-    LUI
+    LUI,
+    // stub opcode
+    UNDEFINED
 };
 
 struct OpcodeDesc
@@ -118,7 +122,14 @@ enum class Cmd : uint8_t
     SRA,
     OR,
     AND,
-    // TODO: ECALL, EBREAK, CSR insts
+    ECALL,
+    EBREAK,
+    CSRRW,
+    CSRRS,
+    CSRRC,
+    CSRRWI,
+    CSRRSI,
+    CSRRCI,
     // RV32M standard extension
     MUL,
     MULH,
@@ -127,7 +138,9 @@ enum class Cmd : uint8_t
     DIV,
     DIVU,
     REM,
-    REMU
+    REMU,
+    // stub command
+    UNDEFINED
 };
 
 struct CmdDesc

@@ -3,7 +3,7 @@
 
 #include "isa_desc.h"
 #include <cassert>
-#include <iostream>
+#include <cstdio>
 #include <type_traits>
 
 namespace ir
@@ -23,10 +23,8 @@ public:
     {
         return reg_;
     }
-    void Dump(std::ostream &ostream) const;
+    void Dump(FILE *f) const;
 };
-
-std::ostream &operator<<(std::ostream &ostream, Reg reg);
 
 class Imm
 {
@@ -42,10 +40,8 @@ public:
     {
         return imm_;
     }
-    void Dump(std::ostream &ostream) const;
+    void Dump(FILE *f) const;
 };
-
-std::ostream &operator<<(std::ostream &ostream, Imm imm);
 
 class Inst
 {
@@ -70,21 +66,18 @@ public:
     }
     Reg GetRs1() const
     {
-        assert(GetCmdFormat() != isa::CmdFormat::U &&
-               GetCmdFormat() != isa::CmdFormat::J);
+        assert(GetCmdFormat() != isa::CmdFormat::U && GetCmdFormat() != isa::CmdFormat::J);
         return rs1_;
     }
     Reg GetRs2() const
     {
-        assert(GetCmdFormat() != isa::CmdFormat::I &&
-               GetCmdFormat() != isa::CmdFormat::U &&
+        assert(GetCmdFormat() != isa::CmdFormat::I && GetCmdFormat() != isa::CmdFormat::U &&
                GetCmdFormat() != isa::CmdFormat::J);
         return rs2_;
     }
     Reg GetRd() const
     {
-        assert(GetCmdFormat() != isa::CmdFormat::S &&
-               GetCmdFormat() != isa::CmdFormat::B);
+        assert(GetCmdFormat() != isa::CmdFormat::S && GetCmdFormat() != isa::CmdFormat::B);
         return rd_;
     }
     isa::Cmd GetCmd() const
@@ -100,14 +93,14 @@ public:
     {
         return isa::GetOpcodeDesc(GetOpcode()).format;
     }
-    void Dump(std::ostream &ostream) const;
+    void Dump(FILE *f) const;
 };
 
-std::ostream &operator<<(std::ostream &ostream, const Inst &inst);
-
 template<isa::CmdFormat Format>
-typename std::enable_if<Format == isa::CmdFormat::R, Inst>::type
-GenInst(isa::Cmd cmd, Reg rd, Reg rs1, Reg rs2)
+typename std::enable_if<Format == isa::CmdFormat::R, Inst>::type GenInst(isa::Cmd cmd,
+                                                                         Reg rd,
+                                                                         Reg rs1,
+                                                                         Reg rs2)
 {
     Inst inst(cmd, rd, rs1, rs2, 0);
     assert(inst.GetCmdFormat() == isa::CmdFormat::R);
@@ -115,8 +108,10 @@ GenInst(isa::Cmd cmd, Reg rd, Reg rs1, Reg rs2)
 }
 
 template<isa::CmdFormat Format>
-typename std::enable_if<Format == isa::CmdFormat::I, Inst>::type
-GenInst(isa::Cmd cmd, Reg rd, Reg rs1, Imm imm)
+typename std::enable_if<Format == isa::CmdFormat::I, Inst>::type GenInst(isa::Cmd cmd,
+                                                                         Reg rd,
+                                                                         Reg rs1,
+                                                                         Imm imm)
 {
     Inst inst(cmd, rd, rs1, 0, imm);
     assert(inst.GetCmdFormat() == isa::CmdFormat::I);
@@ -124,8 +119,10 @@ GenInst(isa::Cmd cmd, Reg rd, Reg rs1, Imm imm)
 }
 
 template<isa::CmdFormat Format>
-typename std::enable_if<Format == isa::CmdFormat::S, Inst>::type
-GenInst(isa::Cmd cmd, Imm imm, Reg rs1, Reg rs2)
+typename std::enable_if<Format == isa::CmdFormat::S, Inst>::type GenInst(isa::Cmd cmd,
+                                                                         Imm imm,
+                                                                         Reg rs1,
+                                                                         Reg rs2)
 {
     Inst inst(cmd, 0, rs1, rs2, imm);
     assert(inst.GetCmdFormat() == isa::CmdFormat::S);
@@ -133,8 +130,9 @@ GenInst(isa::Cmd cmd, Imm imm, Reg rs1, Reg rs2)
 }
 
 template<isa::CmdFormat Format>
-typename std::enable_if<Format == isa::CmdFormat::U, Inst>::type
-GenInst(isa::Cmd cmd, Reg rd, Imm imm)
+typename std::enable_if<Format == isa::CmdFormat::U, Inst>::type GenInst(isa::Cmd cmd,
+                                                                         Reg rd,
+                                                                         Imm imm)
 {
     Inst inst(cmd, rd, 0, 0, imm);
     assert(inst.GetCmdFormat() == isa::CmdFormat::U);
@@ -142,8 +140,10 @@ GenInst(isa::Cmd cmd, Reg rd, Imm imm)
 }
 
 template<isa::CmdFormat Format>
-typename std::enable_if<Format == isa::CmdFormat::B, Inst>::type
-GenInst(isa::Cmd cmd, Imm imm, Reg rs1, Reg rs2)
+typename std::enable_if<Format == isa::CmdFormat::B, Inst>::type GenInst(isa::Cmd cmd,
+                                                                         Imm imm,
+                                                                         Reg rs1,
+                                                                         Reg rs2)
 {
     Inst inst(cmd, 0, rs1, rs2, imm);
     assert(inst.GetCmdFormat() == isa::CmdFormat::B);
@@ -151,8 +151,9 @@ GenInst(isa::Cmd cmd, Imm imm, Reg rs1, Reg rs2)
 }
 
 template<isa::CmdFormat Format>
-typename std::enable_if<Format == isa::CmdFormat::J, Inst>::type
-GenInst(isa::Cmd cmd, Reg rd, Imm imm)
+typename std::enable_if<Format == isa::CmdFormat::J, Inst>::type GenInst(isa::Cmd cmd,
+                                                                         Reg rd,
+                                                                         Imm imm)
 {
     Inst inst(cmd, rd, 0, 0, imm);
     assert(inst.GetCmdFormat() == isa::CmdFormat::J);

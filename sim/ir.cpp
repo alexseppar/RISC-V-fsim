@@ -1,65 +1,62 @@
 #include "ir.h"
 #include "common.h"
-#include <iomanip>
 
 namespace ir
 {
 // Reg
-void Reg::Dump(std::ostream &ostream) const
+void Reg::Dump(FILE *f) const
 {
-    SaveOstreamFlags save_flags(ostream);
-    ostream << 'x' << std::setfill('0') << std::setw(2) << std::right << std::dec
-            << static_cast<uint32_t>(reg_);
-}
-
-std::ostream &operator<<(std::ostream &ostream, Reg reg)
-{
-    reg.Dump(ostream);
-    return ostream;
+    fprintf(f, "x%02u", reg_);
 }
 
 // Imm
-void Imm::Dump(std::ostream &ostream) const
+void Imm::Dump(FILE *f) const
 {
-    SaveOstreamFlags save_flags(ostream);
-    ostream << "i:" << std::setfill('0') << std::setw(5) << std::right << std::hex
-            << imm_;
-}
-
-std::ostream &operator<<(std::ostream &ostream, Imm imm)
-{
-    imm.Dump(ostream);
-    return ostream;
+    fprintf(f, "i:0x%08X", imm_);
 }
 
 // Inst
-void Inst::Dump(std::ostream &ostream) const
+void Inst::Dump(FILE *f) const
 {
-    SaveOstreamFlags save_flags(ostream);
-    ostream << std::setfill(' ') << std::setw(7) << std::left
-            << isa::GetCmdDesc(cmd_).name;
+    fprintf(f, "%-7s", isa::GetCmdDesc(cmd_).name);
     switch (GetCmdFormat())
     {
     case isa::CmdFormat::R:
-        ostream << rs1_ << ',' << rs2_ << "->" << rd_;
+        rs1_.Dump(f);
+        fputc(',', f);
+        rs2_.Dump(f);
+        fputs("->", f);
+        rd_.Dump(f);
         break;
     case isa::CmdFormat::I:
-        ostream << rs1_ << ',' << imm_ << "->" << rd_;
+        if (cmd_ == isa::Cmd::ECALL || cmd_ == isa::Cmd::EBREAK)
+            break;
+        if (cmd_ == isa::Cmd::CSRRWI || cmd_ == isa::Cmd::CSRRSI || cmd_ == isa::Cmd::CSRRCI)
+            Imm(rs1_).Dump(f);
+        else
+            rs1_.Dump(f);
+        fputc(',', f);
+        imm_.Dump(f);
+        fputs("->", f);
+        rd_.Dump(f);
         break;
     case isa::CmdFormat::S:
     case isa::CmdFormat::B:
-        ostream << rs1_ << ',' << rs2_ << ": " << imm_;
+        rs1_.Dump(f);
+        fputc(',', f);
+        rs2_.Dump(f);
+        fputs(": ", f);
+        imm_.Dump(f);
         break;
     case isa::CmdFormat::U:
     case isa::CmdFormat::J:
-        ostream << imm_ << "->" << rd_;
+        imm_.Dump(f);
+        fputs("->", f);
+        rd_.Dump(f);
         break;
+    case isa::CmdFormat::UNDEFINED:
+        fputs("UNDEFINED", f);
     };
-}
-
-std::ostream &operator<<(std::ostream &ostream, const Inst &inst)
-{
-    inst.Dump(ostream);
-    return ostream;
+    fputc('\n', f);
 }
 }
