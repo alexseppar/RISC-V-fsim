@@ -94,6 +94,7 @@ public:
         return isa::GetOpcodeDesc(GetOpcode()).format;
     }
     void Dump(FILE *f) const;
+    void Exec(const ir::Inst *fst_inst, sim::State *state) const;
 };
 
 template<isa::CmdFormat Format>

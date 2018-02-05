@@ -204,7 +204,7 @@ ir::Inst Decoder::Decode(uint32_t command) const
         }
         if (format == isa::CmdFormat::J)
         {
-            uint32_t imm = (int)(SignExtend(fmt.imm, 19)) * 2;
+            uint32_t imm = (int)(SignExtend(fmt.imm, 19));
             return ir::GenInst<isa::CmdFormat::J>(cmd, fmt.rd, imm);
         }
     }

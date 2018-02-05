@@ -59,4 +59,9 @@ void Inst::Dump(FILE *f) const
     };
     fputc('\n', f);
 }
+
+void Inst::Exec(const ir::Inst *fst_inst, sim::State *state) const
+{
+    (*isa::GetCmdDesc(cmd_).exec_func)(fst_inst, this, state);
+}
 }
