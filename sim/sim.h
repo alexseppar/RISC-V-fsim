@@ -15,16 +15,33 @@ class State
 private:
     uint32_t regs_[32];
     uint32_t pc_;
+    uint64_t executed_insts_;
     // TODO: system registers
 public:
     State()
         : pc_(0)
+        , executed_insts_(0)
     {
     }
-    uint32_t GetReg(ir::Reg reg) const;
+    uint32_t GetReg(ir::Reg reg) const
+    {
+        assert(reg < 32 && "Invalid register number");
+        return (reg) ? regs_[reg] : 0u;
+    }
     void SetReg(ir::Reg reg, uint32_t val);
-    uint32_t GetPC() const;
+    uint32_t GetPC() const
+    {
+        return pc_;
+    }
     void SetPC(uint32_t pc);
+    uint64_t GetExecutedInsts()
+    {
+        return executed_insts_;
+    }
+    void AddExecutedInsts(uint32_t num)
+    {
+        executed_insts_ += num;
+    }
     void Dump(FILE *f) const;
 };
 
@@ -37,6 +54,7 @@ private:
 public:
     Trace(uint32_t address, const Decoder &decoder, const std::vector<uint32_t> &commands);
     void Execute(State *state) const;
+    void Dump(FILE *f) const;
 };
 
 // LRU cache of traces; currently indexed by virtual address (PC)
@@ -48,16 +66,28 @@ private:
     std::list<addr_trace_t> traces_;
     std::unordered_map<uint32_t, list_iter_t> links_;
     size_t n_, size_;
+    uint64_t hits_, misses_;
 
 public:
     TraceCache(size_t size)
         : n_(0)
         , size_(size)
+        , hits_(0)
+        , misses_(0)
     {
     }
     const Trace &Refer(uint32_t address,
                        const Decoder &decoder,
                        const std::vector<uint32_t> &commands);
+    uint64_t GetHits() const
+    {
+        return hits_;
+    }
+    uint64_t GetMisses() const
+    {
+        return misses_;
+    }
+    void Dump(FILE *f) const;
 };
 
 class Sim

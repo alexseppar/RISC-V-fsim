@@ -4,31 +4,22 @@
 namespace sim
 {
 // State
-uint32_t State::GetReg(ir::Reg reg) const
-{
-    assert(reg < 32 && "Invalid register number");
-    return (reg) ? regs_[reg] : 0u;
-}
-
 void State::SetReg(ir::Reg reg, uint32_t val)
 {
     assert(reg < 32 && "Invalid register number");
-    reg.Dump(log);
-    fprintf(log, ": 0x%08X <-> ", regs_[reg]);
+    if (options::verbose)
+    {
+        reg.Dump(options::log);
+        fprintf(options::log, ": 0x%08X => 0x%08X\n", regs_[reg], val);
+    }
     regs_[reg] = val;
-    fprintf(log, "0x%08X\n", regs_[reg]);
-}
-
-uint32_t State::GetPC() const
-{
-    return pc_;
 }
 
 void State::SetPC(uint32_t pc)
 {
-    fprintf(log, "PC: 0x%08X <-> ", pc_);
+    if (options::verbose)
+        fprintf(options::log, "PC: 0x%08X => 0x%08X\n", pc_, pc);
     pc_ = pc;
-    fprintf(log, "0x%08X\n", pc_);
 }
 
 void State::Dump(FILE *f) const
@@ -47,12 +38,10 @@ Trace::Trace(uint32_t address, const Decoder &decoder, const std::vector<uint32_
 {
     // TODO: in future, fetch of instructions should be done through MMU, and this process
     // can cause faults; now we simply read array of hard-coded instructions
-    fprintf(log, "Fetching trace:\n");
     while (true)
     {
         ir::Inst inst = decoder.Decode(commands[address / 4]);
         trace_.push_back(inst);
-        inst.Dump(log);
         isa::Opcode opcode = isa::GetCmdDesc(trace_.back().GetCmd()).opcode;
         if (opcode == isa::Opcode::BRANCH || opcode == isa::Opcode::JALR ||
             opcode == isa::Opcode::JAL)
@@ -60,12 +49,24 @@ Trace::Trace(uint32_t address, const Decoder &decoder, const std::vector<uint32_
         address += 4;
     }
     trace_.shrink_to_fit();
+    if (options::verbose)
+    {
+        fprintf(options::log, "Fetching trace:\n");
+        Dump(options::log);
+    }
 }
 
 void Trace::Execute(State *state) const
 {
-    fprintf(log, "Executing trace:\n");
+    if (options::verbose)
+        fprintf(options::log, "Executing trace:\n");
     trace_.data()->Exec(trace_.data(), state);
+}
+
+void Trace::Dump(FILE *f) const
+{
+    for (const auto &inst : trace_)
+        inst.Dump(f);
 }
 
 // TraceCache
@@ -77,6 +78,7 @@ const Trace &TraceCache::Refer(uint32_t address,
     if (it == links_.end())
     {
         // not in cache
+        ++misses_;
         if (n_ < size_)
         {
             // have space
@@ -96,31 +98,55 @@ const Trace &TraceCache::Refer(uint32_t address,
     else
     {
         // in cache
+        ++hits_;
         traces_.splice(traces_.begin(), traces_, it->second);
         it->second = traces_.begin();
     }
     return traces_.front().second;
 }
 
+void TraceCache::Dump(FILE *f) const
+{
+    fprintf(f, "Cached traces:\n");
+    for (const auto &trace : traces_)
+    {
+        fprintf(f, "Address: 0x%#08X\n", trace.first);
+        trace.second.Dump(f);
+    }
+}
+
 // Sim
 Sim::Sim(const std::vector<uint32_t> &commands)
     : commands_(commands)
-    , trace_cache_(5)
+    , trace_cache_(options::cache_size)
 {
 }
 
 void Sim::Execute()
 {
+    Timer timer;
+    timer.Start();
     try
     {
         while (true)
         {
             trace_cache_.Refer(state_.GetPC(), decoder_, commands_).Execute(&state_);
+            if (state_.GetExecutedInsts() >= options::max_insts)
+                break;
         }
     }
     catch (SimException &e)
     {
-        fprintf(log, "%s\n", e.what());
+        fprintf(options::log, "%s\n", e.what());
     }
+    timer.Finish();
+    state_.Dump(options::log);
+    fprintf(options::log, "Some statistics:\n");
+    uint64_t exec_insts = state_.GetExecutedInsts();
+    uint64_t time = timer.GetMilliseconds();
+    fprintf(options::log, "Number of instructions executed: %lu, time: %lu ms, MIPS: %.3lf\n",
+            exec_insts, time, (double)exec_insts / (time * 1000));
+    fprintf(options::log, "Trace cache: hits: %lu, misses: %lu\n", trace_cache_.GetHits(),
+            trace_cache_.GetMisses());
 }
 }
