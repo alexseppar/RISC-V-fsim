@@ -1,5 +1,6 @@
 #include "options.h"
 #include "common.h"
+#include <cstdlib>
 #include <stdexcept>
 #include <string>
 
@@ -9,6 +10,15 @@ bool verbose = false;
 FILE *log = stderr;
 size_t cache_size = 256;
 uint64_t max_insts = 1000000;
+
+void PrintHelp()
+{
+    printf("Sim options:\n");
+    printf("--verbose - enable logging of instructions execution\n");
+    printf("--log-file [filename] - write execution output to file [filename]\n");
+    printf("--cache-size [size] - number of saved traces in LRU cache\n");
+    printf("--max-insts [insts] - number of instructions, after which simulator stops\n");
+}
 
 void ParseOptions(int argc, char *argv[])
 {
@@ -52,6 +62,11 @@ void ParseOptions(int argc, char *argv[])
                 printf("Unrecognized --max-insts option: %s\n", option.c_str());
                 throw;
             }
+        }
+        else if (arg == "--help")
+        {
+            PrintHelp();
+            exit(0);
         }
         else
         {
