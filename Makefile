@@ -27,5 +27,10 @@ build/$(SIM_NAME): $(SIM_OBJECTS)
 build/%.o: $(SIM_DIR)/%.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
+profile: build/$(SIM_NAME)
+	rm -f callgrind.out
+	valgrind --tool=callgrind --callgrind-out-file=callgrind.out ./build/$(SIM_NAME)
+	kcachegrind callgrind.out
+
 clean:
 	rm -rf build/*

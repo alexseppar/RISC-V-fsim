@@ -28,7 +28,7 @@ void State::Dump(FILE *f) const
     for (uint8_t i = 0; i < 32; ++i)
     {
         ir::Reg(i).Dump(f);
-        fprintf(f, ": 0x%08X\n", regs_[i]);
+        fprintf(f, ": 0x%08X%c", regs_[i], (i + 1) % 8 ? '\t' : '\n');
     }
     fprintf(f, "PC: 0x%08X\n", pc_);
 }

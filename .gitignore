@@ -1,4 +1,5 @@
 .directory
 *.swo
 *.swp
+callgrind.out
 build/

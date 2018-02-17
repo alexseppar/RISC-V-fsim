@@ -27,6 +27,34 @@ void ExecBGE(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *sta
 void ExecBLTU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 void ExecBGEU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 
-void ExecADD(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 void ExecADDI(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSLTI(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSLTIU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecXORI(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecORI(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecANDI(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSLLI(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSRLI(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSRAI(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+
+void ExecADD(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSUB(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSLL(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSLT(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSLTU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecXOR(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSRL(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSRA(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecOR(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecAND(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+
+// RV32M standard extension
+void ExecMUL(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecMULH(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecMULHSU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecMULHU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecDIV(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecDIVU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecREM(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecREMU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 #endif
