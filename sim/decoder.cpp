@@ -150,24 +150,36 @@ ir::Inst Decoder::Decode(uint32_t command) const
                 throw SimException("SRLI/SRAI: incorrect immediate");
             }
         }
-        // ECALL, EBREAK instructions
-        else if (cmd == isa::Cmd::ECALL || cmd == isa::Cmd::EBREAK)
+        // ECALL, EBREAK, URET, MRET, SRET, WFI instructions
+        else if ((uint8_t)cmd >= (uint8_t)isa::Cmd::ECALL &&
+                 (uint8_t)cmd <= (uint8_t)isa::Cmd::WFI)
         {
             if (fmt.rs1 || fmt.rd)
             {
-                throw SimException("ECALL/EBREAK: rs1, rd are not zero");
+                throw SimException("SYSTEM instruction: rs1, rd are not zero");
             }
-            if (imm == 0u)
+            switch (imm)
             {
+            case 0x000:
                 cmd = isa::Cmd::ECALL;
-            }
-            else if (imm == 1u)
-            {
+                break;
+            case 0x001:
                 cmd = isa::Cmd::EBREAK;
-            }
-            else
-            {
-                throw SimException("ECALL/EBREAK: incorrect immediate");
+                break;
+            case 0x002:
+                cmd = isa::Cmd::URET;
+                break;
+            case 0x102:
+                cmd = isa::Cmd::SRET;
+                break;
+            case 0x302:
+                cmd = isa::Cmd::MRET;
+                break;
+            case 0x105:
+                cmd = isa::Cmd::WFI;
+                break;
+            default:
+                throw SimException("SYSTEM instruction: incorrect immediate");
             }
         }
         // other instructions

@@ -1,27 +1,8 @@
 #include "sim.h"
-#include "common.h"
 
 namespace sim
 {
 // State
-void State::SetReg(ir::Reg reg, uint32_t val)
-{
-    assert(reg < 32 && "Invalid register number");
-    if (options::verbose)
-    {
-        reg.Dump(options::log);
-        fprintf(options::log, ": 0x%08X => 0x%08X\n", regs_[reg], val);
-    }
-    regs_[reg] = val;
-}
-
-void State::SetPC(uint32_t pc)
-{
-    if (options::verbose)
-        fprintf(options::log, "PC: 0x%08X => 0x%08X\n", pc_, pc);
-    pc_ = pc;
-}
-
 void State::Dump(FILE *f) const
 {
     fprintf(f, "Processor state:\n");

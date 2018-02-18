@@ -1,6 +1,7 @@
 #ifndef SIM_H
 #define SIM_H
 
+#include "common.h"
 #include "decoder.h"
 #include <cstdint>
 #include <cstdio>
@@ -22,18 +23,36 @@ public:
         : pc_(0)
         , executed_insts_(0)
     {
+        regs_[0] = 0;
     }
     uint32_t GetReg(ir::Reg reg) const
     {
         assert(reg < 32 && "Invalid register number");
-        return (reg) ? regs_[reg] : 0u;
+        return regs_[reg];
     }
-    void SetReg(ir::Reg reg, uint32_t val);
+    void SetReg(ir::Reg reg, uint32_t val)
+    {
+        assert(reg < 32 && "Invalid register number");
+        if (options::verbose)
+        {
+            reg.Dump(options::log);
+            fprintf(options::log, ": 0x%08X => 0x%08X\n", regs_[reg], val);
+        }
+        if (reg)
+            regs_[reg] = val;
+    }
+
     uint32_t GetPC() const
     {
         return pc_;
     }
-    void SetPC(uint32_t pc);
+    void SetPC(uint32_t pc)
+    {
+        if (options::verbose)
+            fprintf(options::log, "PC: 0x%08X => 0x%08X\n", pc_, pc);
+        pc_ = pc;
+    }
+
     uint64_t GetExecutedInsts()
     {
         return executed_insts_;
@@ -76,9 +95,9 @@ public:
         , misses_(0)
     {
     }
-    const Trace &Refer(uint32_t address,
-                       const Decoder &decoder,
-                       const std::vector<uint32_t> &commands);
+    inline const Trace &Refer(uint32_t address,
+                              const Decoder &decoder,
+                              const std::vector<uint32_t> &commands);
     uint64_t GetHits() const
     {
         return hits_;

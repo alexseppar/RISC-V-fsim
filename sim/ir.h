@@ -94,7 +94,10 @@ public:
         return isa::GetOpcodeDesc(GetOpcode()).format;
     }
     void Dump(FILE *f) const;
-    void Exec(const ir::Inst *fst_inst, sim::State *state) const;
+    void Exec(const ir::Inst *fst_inst, sim::State *state) const
+    {
+        (*isa::GetCmdDesc(cmd_).exec_func)(fst_inst, this, state);
+    }
 };
 
 template<isa::CmdFormat Format>
