@@ -29,9 +29,11 @@ void Inst::Dump(FILE *f) const
         rd_.Dump(f);
         break;
     case isa::CmdFormat::I:
-        if (cmd_ == isa::Cmd::ECALL || cmd_ == isa::Cmd::EBREAK)
+        if ((uint8_t)cmd_ >= (uint8_t)isa::Cmd::ECALL &&
+            (uint8_t)cmd_ <= (uint8_t)isa::Cmd::WFI)
             break;
-        if (cmd_ == isa::Cmd::CSRRWI || cmd_ == isa::Cmd::CSRRSI || cmd_ == isa::Cmd::CSRRCI)
+        if ((uint8_t)cmd_ >= (uint8_t)isa::Cmd::CSRRWI &&
+            (uint8_t)cmd_ <= (uint8_t)isa::Cmd::CSRRCI)
             Imm(rs1_).Dump(f);
         else
             rs1_.Dump(f);

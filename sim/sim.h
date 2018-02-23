@@ -3,10 +3,9 @@
 
 #include "common.h"
 #include "decoder.h"
+#include <array>
 #include <cstdint>
 #include <cstdio>
-#include <list>
-#include <unordered_map>
 #include <vector>
 
 namespace sim
@@ -14,16 +13,18 @@ namespace sim
 class State
 {
 private:
-    uint32_t regs_[32];
+    std::array<uint32_t, 32> regs_;
     uint32_t pc_;
     uint64_t executed_insts_;
-    // TODO: system registers
+    // TODO: system registers, MMU
+    std::vector<uint32_t> commands_;   // use MMU in future
 public:
-    State()
+    State(const std::vector<uint32_t> commands)
         : pc_(0)
         , executed_insts_(0)
+        , commands_(commands)
     {
-        regs_[0] = 0;
+        regs_.fill(0u);
     }
     uint32_t GetReg(ir::Reg reg) const
     {
@@ -33,13 +34,15 @@ public:
     void SetReg(ir::Reg reg, uint32_t val)
     {
         assert(reg < 32 && "Invalid register number");
-        if (options::verbose)
-        {
-            reg.Dump(options::log);
-            fprintf(options::log, ": 0x%08X => 0x%08X\n", regs_[reg], val);
-        }
         if (reg)
+        {
+            if (options::verbose)
+            {
+                reg.Dump(options::log);
+                fprintf(options::log, ": 0x%08X => 0x%08X\n", regs_[reg], val);
+            }
             regs_[reg] = val;
+        }
     }
 
     uint32_t GetPC() const
@@ -62,42 +65,52 @@ public:
         executed_insts_ += num;
     }
     void Dump(FILE *f) const;
+
+    // use MMU in future
+    uint32_t GetCmd(uint32_t index) const
+    {
+        return commands_[index];
+    }
 };
 
-// optimization of execution through handler chaining and caching of decoded instructions
 class Trace
 {
 private:
     std::vector<ir::Inst> trace_;
 
 public:
-    Trace(uint32_t address, const Decoder &decoder, const std::vector<uint32_t> &commands);
-    void Execute(State *state) const;
+    Trace(const Decoder &decoder, const State &state);
+    void Execute(State *state) const
+    {
+        if (options::verbose)
+            fprintf(options::log, "Executing trace:\n");
+        trace_.data()->Exec(trace_.data(), state);
+    }
     void Dump(FILE *f) const;
 };
 
-// LRU cache of traces; currently indexed by virtual address (PC)
 class TraceCache
 {
 private:
-    typedef typename std::pair<uint32_t, Trace> addr_trace_t;
-    typedef typename std::list<addr_trace_t>::iterator list_iter_t;
-    std::list<addr_trace_t> traces_;
-    std::unordered_map<uint32_t, list_iter_t> links_;
-    size_t n_, size_;
+    LRUCache<uint32_t, Trace> cache_;
     uint64_t hits_, misses_;
 
 public:
     TraceCache(size_t size)
-        : n_(0)
-        , size_(size)
+        : cache_(size)
         , hits_(0)
         , misses_(0)
     {
     }
-    inline const Trace &Refer(uint32_t address,
-                              const Decoder &decoder,
-                              const std::vector<uint32_t> &commands);
+    const Trace &Refer(const Decoder &decoder, const State &state)
+    {
+        auto res = cache_.Insert(state.GetPC(), decoder, state);
+        if (res.second)
+            ++misses_;
+        else
+            ++hits_;
+        return res.first;
+    }
     uint64_t GetHits() const
     {
         return hits_;
@@ -112,10 +125,9 @@ public:
 class Sim
 {
 private:
-    State state_;
     Decoder decoder_;
-    std::vector<uint32_t> commands_;   // TODO: use elf loader and place insts in memory
     TraceCache trace_cache_;
+    State state_;
 
 public:
     Sim(const std::vector<uint32_t> &commands);

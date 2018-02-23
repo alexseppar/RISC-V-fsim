@@ -6,6 +6,7 @@ int main(int argc, char *argv[])
     try
     {
         options::ParseOptions(argc, argv);
+        options::OpenLog();
         std::vector<uint32_t> cmds = {
             0b00000000001100111000000010110011,   // ADD x7,x3->x1
             0b11001010010100101000010100010011,   // ADDI x5,CA5->x10
@@ -13,7 +14,7 @@ int main(int argc, char *argv[])
         };
         sim::Sim simulator(cmds);
         simulator.Execute();
-        options::CloseFiles();
+        options::CloseLog();
     }
     catch (std::exception &e)
     {

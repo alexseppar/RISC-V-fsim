@@ -15,13 +15,14 @@ void State::Dump(FILE *f) const
 }
 
 // Trace
-Trace::Trace(uint32_t address, const Decoder &decoder, const std::vector<uint32_t> &commands)
+Trace::Trace(const Decoder &decoder, const State &state)
 {
     // TODO: in future, fetch of instructions should be done through MMU, and this process
     // can cause faults; now we simply read array of hard-coded instructions
+    uint32_t address = state.GetPC();
     while (true)
     {
-        ir::Inst inst = decoder.Decode(commands[address / 4]);
+        ir::Inst inst = decoder.Decode(state.GetCmd(address / 4));
         trace_.push_back(inst);
         isa::Opcode opcode = isa::GetCmdDesc(trace_.back().GetCmd()).opcode;
         if (opcode == isa::Opcode::BRANCH || opcode == isa::Opcode::JALR ||
@@ -37,13 +38,6 @@ Trace::Trace(uint32_t address, const Decoder &decoder, const std::vector<uint32_
     }
 }
 
-void Trace::Execute(State *state) const
-{
-    if (options::verbose)
-        fprintf(options::log, "Executing trace:\n");
-    trace_.data()->Exec(trace_.data(), state);
-}
-
 void Trace::Dump(FILE *f) const
 {
     for (const auto &inst : trace_)
@@ -51,45 +45,10 @@ void Trace::Dump(FILE *f) const
 }
 
 // TraceCache
-const Trace &TraceCache::Refer(uint32_t address,
-                               const Decoder &decoder,
-                               const std::vector<uint32_t> &commands)
-{
-    std::unordered_map<uint32_t, list_iter_t>::iterator it = links_.find(address);
-    if (it == links_.end())
-    {
-        // not in cache
-        ++misses_;
-        if (n_ < size_)
-        {
-            // have space
-            ++n_;
-        }
-        else
-        {
-            // cache is full
-            links_.erase(traces_.back().first);
-            traces_.pop_back();
-        }
-        // insert in front
-        traces_.emplace_front(std::piecewise_construct, std::forward_as_tuple(address),
-                              std::forward_as_tuple(address, decoder, commands));
-        links_.insert({address, traces_.begin()});
-    }
-    else
-    {
-        // in cache
-        ++hits_;
-        traces_.splice(traces_.begin(), traces_, it->second);
-        it->second = traces_.begin();
-    }
-    return traces_.front().second;
-}
-
 void TraceCache::Dump(FILE *f) const
 {
     fprintf(f, "Cached traces:\n");
-    for (const auto &trace : traces_)
+    for (const auto &trace : cache_)
     {
         fprintf(f, "Address: 0x%#08X\n", trace.first);
         trace.second.Dump(f);
@@ -98,8 +57,8 @@ void TraceCache::Dump(FILE *f) const
 
 // Sim
 Sim::Sim(const std::vector<uint32_t> &commands)
-    : commands_(commands)
-    , trace_cache_(options::cache_size)
+    : trace_cache_(options::cache_size)
+    , state_(commands)
 {
 }
 
@@ -111,7 +70,7 @@ void Sim::Execute()
     {
         while (true)
         {
-            trace_cache_.Refer(state_.GetPC(), decoder_, commands_).Execute(&state_);
+            trace_cache_.Refer(decoder_, state_).Execute(&state_);
             if (state_.GetExecutedInsts() >= options::max_insts)
                 break;
         }

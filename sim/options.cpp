@@ -6,80 +6,60 @@
 
 namespace options
 {
-bool verbose = false;
-FILE *log = stderr;
-size_t cache_size = 256;
-uint64_t max_insts = 1000000;
+#define OPTION_DEF(var, type, def, opt_name, arg_name, desc) \
+    Option<type> var(def, opt_name, arg_name, desc);
+#include "options_list.h"
+#undef OPTION_DEF
+FILE *log;
 
 void PrintHelp()
 {
-    printf("Sim options:\n");
-    printf("--verbose - enable logging of instructions execution\n");
-    printf("--log-file [filename] - write execution output to file [filename]\n");
-    printf("--cache-size [size] - number of saved traces in LRU cache\n");
-    printf("--max-insts [insts] - number of instructions, after which simulator stops\n");
+#define OPTION_DEF(var, type, def, opt_name, arg_name, desc) var.PrintHelp();
+#include "options_list.h"
+#undef OPTION_DEF
 }
 
 void ParseOptions(int argc, char *argv[])
 {
-    int i = 1;
-    while (i < argc)
+    int cur_arg = 1;
+    while (cur_arg < argc)
     {
-        std::string arg = argv[i++];
-        if (arg == "--verbose")
+        if (!strcmp("--help", argv[cur_arg]))
         {
-            verbose = true;
-        }
-        else if (arg == "--log-file")
-        {
-            std::string option = argv[i++];
-            log = fopen(option.c_str(), "w");
-            if (!log)
-                throw std::invalid_argument(std::string("Can not open file: ") + option);
-        }
-        else if (arg == "--cache-size")
-        {
-            std::string option = argv[i++];
-            try
-            {
-                cache_size = std::stoull(option);
-            }
-            catch (std::exception &e)
-            {
-                printf("Unrecognized --cache-size option: %s\n", option.c_str());
-                throw;
-            }
-        }
-        else if (arg == "--max-insts")
-        {
-            std::string option = argv[i++];
-            try
-            {
-                max_insts = std::stoull(option);
-            }
-            catch (std::exception &e)
-            {
-                printf("Unrecognized --max-insts option: %s\n", option.c_str());
-                throw;
-            }
-        }
-        else if (arg == "--help")
-        {
+            printf("Sim options:\n");
             PrintHelp();
             exit(0);
         }
+#define OPTION_DEF(var, type, def, opt_name, arg_name, desc) \
+    else if (var.ParseOption(cur_arg, argc, argv)) {}
+#include "options_list.h"
+#undef OPTION_DEF
         else
         {
-            throw std::invalid_argument(std::string("Unrecognized argument: ") + arg);
+            throw std::invalid_argument(std::string("Unrecognized argument: ") +
+                                        argv[cur_arg]);
         }
-    };
+    }
 }
 
-void CloseFiles()
+void OpenLog()
 {
-    if (log)
+    if (log_file)
     {
-        fclose(log);
+        log = fopen(log_file, "w");
+        if (!log)
+        {
+            printf("Can not open log file: %s\n", (char *)log_file);
+            log = stderr;
+        }
     }
+    else
+        log = stderr;
+}
+
+void CloseLog()
+{
+    if (log != stderr)
+        fclose(log);
 }
 }
