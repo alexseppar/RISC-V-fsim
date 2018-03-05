@@ -62,6 +62,12 @@ Sim::Sim(const std::vector<uint32_t> &commands)
 {
 }
 
+Sim::Sim(const std::vector<uint32_t> &commands, uint32_t pc)
+    : trace_cache_(options::cache_size)
+    , state_(commands, pc)
+{
+}
+
 void Sim::Execute()
 {
     Timer timer;

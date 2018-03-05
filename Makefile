@@ -4,7 +4,7 @@ CFLAGS = -std=c++14 -Wall -Wextra -Wpedantic -Wno-packed-bitfield-compat
 CFLAGS += -g
 # RELEASE mode
 # CFLAGS += -O2 -DNDEBUG
-LDFLAGS = -lm
+LDFLAGS = -l elf -lm
 
 SIM_DIR = sim
 SIM_NAME = riscvsim

@@ -1,3 +1,4 @@
+#include "elf_reader.h"
 #include "options.h"
 #include "sim.h"
 
@@ -7,12 +8,15 @@ int main(int argc, char *argv[])
     {
         options::ParseOptions(argc, argv);
         options::OpenLog();
-        std::vector<uint32_t> cmds = {
-            0b00000000001100111000000010110011,   // ADD x7,x3->x1
-            0b11001010010100101000010100010011,   // ADDI x5,CA5->x10
-            0b11111111111111111100000001101111    // JAL [-4 * 2]
-        };
-        sim::Sim simulator(cmds);
+
+        elf::Elf_reader er;
+        er.Init(options::elf_file);
+        std::vector<uint32_t> cmds;
+        uint32_t pc = 0;
+        if (!er.Load(cmds, pc))
+            fprintf(options::log, "Can't load segment\n");
+
+        sim::Sim simulator(cmds, pc);
         simulator.Execute();
         options::CloseLog();
     }

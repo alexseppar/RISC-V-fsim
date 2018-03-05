@@ -26,6 +26,13 @@ public:
     {
         regs_.fill(0u);
     }
+    State(const std::vector<uint32_t> commands, uint32_t pc)
+        : pc_(pc)
+        , executed_insts_(0)
+        , commands_(commands)
+    {
+        regs_.fill(0u);
+    }
     uint32_t GetReg(ir::Reg reg) const
     {
         assert(reg < 32 && "Invalid register number");
@@ -131,6 +138,7 @@ private:
 
 public:
     Sim(const std::vector<uint32_t> &commands);
+    Sim(const std::vector<uint32_t> &commands, uint32_t pc);
     Sim(const Sim &rhs) = delete;
     Sim &operator=(const Sim &rhs) = delete;
     void Execute();
