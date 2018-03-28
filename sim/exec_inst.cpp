@@ -57,7 +57,7 @@ void ExecJALR(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *st
     uint32_t cur_pc = GET_PC() + (cur_inst - fst_inst) * 4;
     RD(cur_pc + 4);
     uint32_t offset = RS1 + IMM;
-    SET_PC(cur_pc + (offset & !1ull));
+    SET_PC(offset & ~1u);
     END_TRACE();
 }
 
