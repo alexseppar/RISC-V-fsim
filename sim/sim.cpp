@@ -95,4 +95,4 @@ void Sim::Execute()
     fprintf(options::log, "Trace cache: hits: %lu, misses: %lu\n", trace_cache_.GetHits(),
             trace_cache_.GetMisses());
 }
-}
+}   // namespace sim

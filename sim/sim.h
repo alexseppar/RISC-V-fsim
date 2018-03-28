@@ -143,6 +143,6 @@ public:
     Sim &operator=(const Sim &rhs) = delete;
     void Execute();
 };
-}
+}   // namespace sim
 
 #endif

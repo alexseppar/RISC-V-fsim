@@ -35,6 +35,6 @@ public:
     Elf_reader &operator=(const Elf_reader &) = delete;
     ~Elf_reader();
 };
-}
+}   // namespace elf
 
 #endif

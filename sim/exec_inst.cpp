@@ -34,13 +34,13 @@ void ExecDummy(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *s
 
 void ExecLUI(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
-    RD(UIMM << 12);
+    RD(UIMM);
     NEXT_INST();
 }
 
 void ExecAUIPC(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
-    RD(GET_PC() + (cur_inst - fst_inst) * 4 + (UIMM << 12));
+    RD(GET_PC() + (cur_inst - fst_inst) * 4 + UIMM);
     NEXT_INST();
 }
 

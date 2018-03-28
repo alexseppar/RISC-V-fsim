@@ -21,5 +21,5 @@ public:
     Decoder();
     ir::Inst Decode(uint32_t cmd) const;
 };
-}
+}   // namespace sim
 #endif

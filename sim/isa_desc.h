@@ -162,6 +162,6 @@ const OpcodeDesc &GetOpcodeDesc(Opcode opcode);
 size_t GetCmdsNum();
 const CmdDesc &GetCmdDesc(uint8_t cmd);
 const CmdDesc &GetCmdDesc(Cmd cmd);
-}
+}   // namespace isa
 
 #endif

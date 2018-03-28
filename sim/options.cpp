@@ -62,4 +62,4 @@ void CloseLog()
     if (log != stderr)
         fclose(log);
 }
-}
+}   // namespace options

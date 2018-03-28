@@ -195,13 +195,16 @@ ir::Inst Decoder::Decode(uint32_t command) const
         isa::SFormat fmt;
         memcpy((void *)&fmt, (void *)&command, 4);
         isa::Cmd cmd = GetCmd(opcode, fmt.funct3);
-        uint32_t imm = SignExtend(((uint32_t)fmt.imm2 << 5) | fmt.imm1, 11);
         if (format == isa::CmdFormat::S)
         {
+            uint32_t imm = SignExtend((uint32_t)fmt.imm2 << 5 | fmt.imm1, 11);
             return ir::GenInst<isa::CmdFormat::S>(cmd, imm, fmt.rs1, fmt.rs2);
         }
         if (format == isa::CmdFormat::B)
         {
+            uint32_t imm = SignExtend((uint32_t)fmt.imm1 >> 1 | (fmt.imm2 & 0x3f) << 4 |
+                                          (fmt.imm1 & 1) << 10 | (fmt.imm2 >> 6) << 11,
+                                      11);
             return ir::GenInst<isa::CmdFormat::B>(cmd, imm, fmt.rs1, fmt.rs2);
         }
     }
@@ -213,11 +216,13 @@ ir::Inst Decoder::Decode(uint32_t command) const
         isa::Cmd cmd = GetCmd(opcode);
         if (format == isa::CmdFormat::U)
         {
-            return ir::GenInst<isa::CmdFormat::U>(cmd, fmt.rd, fmt.imm);
+            return ir::GenInst<isa::CmdFormat::U>(cmd, fmt.rd, fmt.imm << 12);
         }
         if (format == isa::CmdFormat::J)
         {
-            uint32_t imm = (int)(SignExtend(fmt.imm, 19));
+            uint32_t imm = SignExtend((fmt.imm >> 9 & 0x3ff) | (fmt.imm >> 8 & 1) << 10 |
+                                          (fmt.imm & 0xff) << 11 | (fmt.imm >> 19) << 19,
+                                      19);
             return ir::GenInst<isa::CmdFormat::J>(cmd, fmt.rd, imm);
         }
     }
@@ -225,4 +230,4 @@ ir::Inst Decoder::Decode(uint32_t command) const
     // should not execute, need to suppress g++ warning
     return ir::Inst(isa::Cmd::UNDEFINED, 0, 0, 0, 0);
 }
-}
+}   // namespace sim

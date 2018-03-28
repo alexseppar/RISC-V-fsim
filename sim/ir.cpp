@@ -61,4 +61,4 @@ void Inst::Dump(FILE *f) const
     };
     fputc('\n', f);
 }
-}
+}   // namespace ir

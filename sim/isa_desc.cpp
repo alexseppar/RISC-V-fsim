@@ -113,4 +113,4 @@ const CmdDesc &GetCmdDesc(Cmd cmd)
 {
     return GetCmdDesc(static_cast<uint8_t>(cmd));
 }
-}
+}   // namespace isa

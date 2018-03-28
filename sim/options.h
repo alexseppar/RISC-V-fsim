@@ -103,5 +103,5 @@ extern FILE *log;
 void ParseOptions(int argc, char *argv[]);
 void OpenLog();
 void CloseLog();
-}
+}   // namespace options
 #endif

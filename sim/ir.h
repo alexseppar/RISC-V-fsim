@@ -163,6 +163,6 @@ typename std::enable_if<Format == isa::CmdFormat::J, Inst>::type GenInst(isa::Cm
     assert(inst.GetCmdFormat() == isa::CmdFormat::J);
     return inst;
 }
-}
+}   // namespace ir
 
 #endif

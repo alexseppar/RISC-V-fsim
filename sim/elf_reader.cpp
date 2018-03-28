@@ -81,4 +81,4 @@ void Elf_reader::Clear()
 }
 
 Elf_reader::~Elf_reader() {}
-}
+}   // namespace elf
