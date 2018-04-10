@@ -55,6 +55,8 @@ private:
 };
 
 // LRU cache, helpful as trace cache (and TLB in future)
+// ValType has to have default constructor
+//
 template<typename KeyType, typename ValType>
 class LRUCache
 {

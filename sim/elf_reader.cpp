@@ -45,7 +45,7 @@ void Elf_reader::Init(const char *filename)
     entry_ = ehdr.e_entry;
 }
 
-bool Elf_reader::Load(std::vector<uint32_t> &cmds, uint32_t &offset)
+bool Elf_reader::Load(std::vector<uint32_t> &cmds, uint32_t &va, uint32_t &offset)
 {
     for (; cur_phdr_ < phdrnum_; ++cur_phdr_)
     {
@@ -66,7 +66,8 @@ bool Elf_reader::Load(std::vector<uint32_t> &cmds, uint32_t &offset)
             print_and_exit("Elf: segment reading failed\n");
         ++cur_phdr_;
         std::swap(cmds, buf);
-        offset = entry_ - phdr_.p_vaddr;
+        va = phdr_.p_vaddr;
+        offset = entry_;   //- va;   // phdr_.p_vaddr;
         return true;
     }
     return false;

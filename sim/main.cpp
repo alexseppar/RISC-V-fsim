@@ -12,11 +12,11 @@ int main(int argc, char *argv[])
         elf::Elf_reader er;
         er.Init(options::elf_file);
         std::vector<uint32_t> cmds;
-        uint32_t pc = 0;
-        if (!er.Load(cmds, pc))
+        uint32_t pc = 0, va;
+        if (!er.Load(cmds, va, pc))
             fprintf(options::log, "Can't load segment\n");
 
-        sim::Sim simulator(cmds, pc);
+        sim::Sim simulator(cmds, va, pc);
         simulator.Execute();
         options::CloseLog();
     }

@@ -15,6 +15,15 @@ typedef void (*ExecFunc)(const ir::Inst *, const ir::Inst *, sim::State *);
 
 void ExecDummy(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 
+void ExecLB(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecLW(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecLH(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecLBU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecLHU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSB(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSH(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecSW(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+
 void ExecLUI(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 void ExecAUIPC(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 

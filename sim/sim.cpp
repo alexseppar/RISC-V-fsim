@@ -15,14 +15,14 @@ void State::Dump(FILE *f) const
 }
 
 // Trace
-Trace::Trace(const Decoder &decoder, const State &state)
+Trace::Trace(const Decoder &decoder, State &state)
 {
     // TODO: in future, fetch of instructions should be done through MMU, and this process
     // can cause faults; now we simply read array of hard-coded instructions
     uint32_t address = state.GetPC();
     while (true)
     {
-        ir::Inst inst = decoder.Decode(state.GetCmd(address / 4));
+        ir::Inst inst = decoder.Decode(state.GetCmd(address));   // / 4));
         trace_.push_back(inst);
         isa::Opcode opcode = isa::GetCmdDesc(trace_.back().GetCmd()).opcode;
         if (opcode == isa::Opcode::BRANCH || opcode == isa::Opcode::JALR ||
@@ -56,15 +56,17 @@ void TraceCache::Dump(FILE *f) const
 }
 
 // Sim
+#if 0
 Sim::Sim(const std::vector<uint32_t> &commands)
     : trace_cache_(options::cache_size)
     , state_(commands)
 {
 }
+#endif
 
-Sim::Sim(const std::vector<uint32_t> &commands, uint32_t pc)
+Sim::Sim(const std::vector<uint32_t> &commands, uint32_t va, uint32_t pc)
     : trace_cache_(options::cache_size)
-    , state_(commands, pc)
+    , state_(commands, va, pc)
 {
 }
 

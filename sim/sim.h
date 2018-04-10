@@ -3,9 +3,12 @@
 
 #include "common.h"
 #include "decoder.h"
+#include "mmu.h"
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <vector>
 
 namespace sim
@@ -17,8 +20,14 @@ private:
     uint32_t pc_;
     uint64_t executed_insts_;
     // TODO: system registers, MMU
-    std::vector<uint32_t> commands_;   // use MMU in future
+    // std::vector<uint32_t> commands_;   // use MMU in future
+    uint64_t pmem_size_ = 25 * 4096;
+    uint32_t satp_ = 0x00300017u;   // reg
+    uint8_t *pmem_;
+    MMU mmu_;
+
 public:
+#if 0
     State(const std::vector<uint32_t> commands)
         : pc_(0)
         , executed_insts_(0)
@@ -26,12 +35,16 @@ public:
     {
         regs_.fill(0u);
     }
-    State(const std::vector<uint32_t> commands, uint32_t pc)
+#endif
+    State(const std::vector<uint32_t> commands, uint32_t va, uint32_t pc)
         : pc_(pc)
         , executed_insts_(0)
-        , commands_(commands)
+        , pmem_(new uint8_t[pmem_size_]())
+        , mmu_(pmem_, pmem_size_, satp_)
     {
         regs_.fill(0u);
+        // put segment in pmem_ (pa = va)
+        memcpy(pmem_ + va, commands.data(), commands.size() * 4);
     }
     uint32_t GetReg(ir::Reg reg) const
     {
@@ -73,10 +86,22 @@ public:
     }
     void Dump(FILE *f) const;
 
-    // use MMU in future
-    uint32_t GetCmd(uint32_t index) const
+    uint32_t GetCmd(uint32_t va)
     {
-        return commands_[index];
+        return mmu_.Load(va, sizeof(va));
+    }
+
+    void Write(uint32_t va, uint8_t nbytes, uint32_t data)
+    {
+        if (options::verbose)
+            fprintf(options::log, "M: 0x%08X <= 0x%08X\n", va,
+                    nbytes == 4 ? data : data & ((1 << (8 * nbytes)) - 1));
+        mmu_.Store(va, nbytes, data);
+    }
+
+    uint32_t Read(uint32_t va, uint8_t nbytes)
+    {
+        return mmu_.Load(va, nbytes);
     }
 };
 
@@ -86,7 +111,7 @@ private:
     std::vector<ir::Inst> trace_;
 
 public:
-    Trace(const Decoder &decoder, const State &state);
+    Trace(const Decoder &decoder, State &state);
     void Execute(State *state) const
     {
         if (options::verbose)
@@ -109,7 +134,7 @@ public:
         , misses_(0)
     {
     }
-    const Trace &Refer(const Decoder &decoder, const State &state)
+    const Trace &Refer(const Decoder &decoder, State &state)
     {
         auto res = cache_.Insert(state.GetPC(), decoder, state);
         if (res.second)
@@ -138,7 +163,7 @@ private:
 
 public:
     Sim(const std::vector<uint32_t> &commands);
-    Sim(const std::vector<uint32_t> &commands, uint32_t pc);
+    Sim(const std::vector<uint32_t> &commands, uint32_t va, uint32_t pc);
     Sim(const Sim &rhs) = delete;
     Sim &operator=(const Sim &rhs) = delete;
     void Execute();

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdio>
 
+#define SIGN_EXTEND(val, bitsUsed) (static_cast<int32_t>(static_cast<int##bitsUsed##_t>(val)))
 #define URS1 (state->GetReg(cur_inst->GetRs1()))
 #define RS1 ((int32_t)state->GetReg(cur_inst->GetRs1()))
 #define URS2 (state->GetReg(cur_inst->GetRs2()))
@@ -29,6 +30,66 @@
 void ExecDummy(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
     fprintf(options::log, "This instruction is not implemented yet\n");
+    NEXT_INST();
+}
+
+void ExecLB(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
+{
+    uint32_t val = state->Read(RS1 + IMM, 1);
+    RD(SIGN_EXTEND(val, 8));
+    NEXT_INST();
+}
+
+void ExecLW(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
+{
+    uint32_t val = state->Read(RS1 + IMM, 4);
+    RD(SIGN_EXTEND(val, 16));
+    NEXT_INST();
+}
+
+void ExecLH(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
+{
+    uint32_t val = state->Read(RS1 + IMM, 2);
+    RD(SIGN_EXTEND(val, 32));
+    NEXT_INST();
+}
+
+void ExecLBU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
+{
+    uint32_t val = state->Read(RS1 + IMM, 1);
+    RD(val);
+    NEXT_INST();
+}
+
+void ExecLWU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
+{
+    uint32_t val = state->Read(RS1 + IMM, 4);
+    RD(val);
+    NEXT_INST();
+}
+
+void ExecLHU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
+{
+    uint32_t val = state->Read(RS1 + IMM, 2);
+    RD(val);
+    NEXT_INST();
+}
+
+void ExecSB(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
+{
+    state->Write(RS1 + IMM, 1, RS2);
+    NEXT_INST();
+}
+
+void ExecSW(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
+{
+    state->Write(RS1 + IMM, 4, RS2);
+    NEXT_INST();
+}
+
+void ExecSH(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
+{
+    state->Write(RS1 + IMM, 2, RS2);
     NEXT_INST();
 }
 
@@ -64,42 +125,42 @@ void ExecJALR(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *st
 void ExecBEQ(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
     uint32_t cur_pc = GET_PC() + (cur_inst - fst_inst) * 4;
-    SET_PC(RS1 == RS2 ? cur_pc + IMM : cur_pc + 4);
+    SET_PC(RS1 == RS2 ? cur_pc + IMM * 2 : cur_pc + 4);
     END_TRACE();
 }
 
 void ExecBNE(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
     uint32_t cur_pc = GET_PC() + (cur_inst - fst_inst) * 4;
-    SET_PC(RS1 != RS2 ? cur_pc + IMM : cur_pc + 4);
+    SET_PC(RS1 != RS2 ? cur_pc + IMM * 2 : cur_pc + 4);
     END_TRACE();
 }
 
 void ExecBLT(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
     uint32_t cur_pc = GET_PC() + (cur_inst - fst_inst) * 4;
-    SET_PC(RS1 < RS2 ? cur_pc + IMM : cur_pc + 4);
+    SET_PC(RS1 < RS2 ? cur_pc + IMM * 2 : cur_pc + 4);
     END_TRACE();
 }
 
 void ExecBGE(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
     uint32_t cur_pc = GET_PC() + (cur_inst - fst_inst) * 4;
-    SET_PC(RS1 >= RS2 ? cur_pc + IMM : cur_pc + 4);
+    SET_PC(RS1 >= RS2 ? cur_pc + IMM * 2 : cur_pc + 4);
     END_TRACE();
 }
 
 void ExecBLTU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
     uint32_t cur_pc = GET_PC() + (cur_inst - fst_inst) * 4;
-    SET_PC(URS1 < URS2 ? cur_pc + IMM : cur_pc + 4);
+    SET_PC(URS1 < URS2 ? cur_pc + IMM * 2 : cur_pc + 4);
     END_TRACE();
 }
 
 void ExecBGEU(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
     uint32_t cur_pc = GET_PC() + (cur_inst - fst_inst) * 4;
-    SET_PC(URS1 >= URS2 ? cur_pc + IMM : cur_pc + 4);
+    SET_PC(URS1 >= URS2 ? cur_pc + IMM * 2 : cur_pc + 4);
     END_TRACE();
 }
 
