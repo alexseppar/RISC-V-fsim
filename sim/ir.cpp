@@ -18,7 +18,7 @@ void Imm::Dump(FILE *f) const
 // Inst
 void Inst::Dump(FILE *f) const
 {
-    fprintf(f, "%-7s", isa::GetCmdDesc(cmd_).name);
+    fprintf(f, "\t%-7s", isa::GetCmdDesc(cmd_).name);
     switch (GetCmdFormat())
     {
     case isa::CmdFormat::R:

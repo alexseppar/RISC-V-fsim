@@ -43,14 +43,14 @@ void ExecLB(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *stat
 void ExecLW(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
     uint32_t val = state->Read(RS1 + IMM, 4);
-    RD(SIGN_EXTEND(val, 16));
+    RD(SIGN_EXTEND(val, 32));
     NEXT_INST();
 }
 
 void ExecLH(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
     uint32_t val = state->Read(RS1 + IMM, 2);
-    RD(SIGN_EXTEND(val, 32));
+    RD(SIGN_EXTEND(val, 16));
     NEXT_INST();
 }
 

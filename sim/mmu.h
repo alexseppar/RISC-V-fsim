@@ -64,7 +64,7 @@ public:
             return va;
         }
         uint64_t table_pa = (satp_ & 0x3fffff) * pagesize_;
-        uint8_t i = levels_ - 1;
+        int8_t i = levels_ - 1;
         uint32_t *pte;
 
         while (1)

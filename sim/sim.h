@@ -43,6 +43,7 @@ public:
         , mmu_(pmem_, pmem_size_, satp_)
     {
         regs_.fill(0u);
+        regs_[2] = pmem_size_ - 2 * 4096;
         // put segment in pmem_ (pa = va)
         memcpy(pmem_ + va, commands.data(), commands.size() * 4);
     }
@@ -58,6 +59,7 @@ public:
         {
             if (options::verbose)
             {
+                fprintf(options::log, "\t");
                 reg.Dump(options::log);
                 fprintf(options::log, ": 0x%08X => 0x%08X\n", regs_[reg], val);
             }
@@ -72,7 +74,7 @@ public:
     void SetPC(uint32_t pc)
     {
         if (options::verbose)
-            fprintf(options::log, "PC: 0x%08X => 0x%08X\n", pc_, pc);
+            fprintf(options::log, "\tPC: 0x%08X => 0x%08X\n", pc_, pc);
         pc_ = pc;
     }
 
@@ -94,7 +96,7 @@ public:
     void Write(uint32_t va, uint8_t nbytes, uint32_t data)
     {
         if (options::verbose)
-            fprintf(options::log, "M: 0x%08X <= 0x%08X\n", va,
+            fprintf(options::log, "\tM: 0x%08X <= 0x%08X\n", va,
                     nbytes == 4 ? data : data & ((1 << (8 * nbytes)) - 1));
         mmu_.Store(va, nbytes, data);
     }
