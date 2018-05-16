@@ -58,7 +58,7 @@ const CmdDesc cmd_desc[] =
     {"SRA",    &ExecSRA,   Opcode::OP,     0b101, 0b0100000},
     {"OR",     &ExecOR,    Opcode::OP,     0b110, 0b0000000},
     {"AND",    &ExecAND,   Opcode::OP,     0b111, 0b0000000},
-    {"ECALL",  &ExecDummy, Opcode::SYSTEM, 0b000},
+    {"ECALL",  &ExecECALL, Opcode::SYSTEM, 0b000},
     {"EBREAK", &ExecDummy, Opcode::SYSTEM, 0b000},
     {"URET",   &ExecDummy, Opcode::SYSTEM, 0b000},
     {"SRET",   &ExecDummy, Opcode::SYSTEM, 0b000},

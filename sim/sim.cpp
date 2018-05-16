@@ -64,9 +64,11 @@ Sim::Sim(const std::vector<uint32_t> &commands)
 }
 #endif
 
-Sim::Sim(const std::vector<uint32_t> &commands, uint32_t va, uint32_t pc)
+Sim::Sim(const std::vector<std::vector<uint32_t>> &commands,
+         const std::vector<uint32_t> &seg_va,
+         uint32_t pc)
     : trace_cache_(options::cache_size)
-    , state_(commands, va, pc)
+    , state_(commands, seg_va, pc)
 {
 }
 

@@ -15,6 +15,7 @@ typedef void (*ExecFunc)(const ir::Inst *, const ir::Inst *, sim::State *);
 
 void ExecDummy(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 
+void ExecECALL(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 void ExecLB(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 void ExecLW(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 void ExecLH(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);

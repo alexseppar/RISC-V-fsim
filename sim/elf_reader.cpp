@@ -45,17 +45,19 @@ void Elf_reader::Init(const char *filename)
     entry_ = ehdr.e_entry;
 }
 
-bool Elf_reader::Load(std::vector<uint32_t> &cmds, uint32_t &va, uint32_t &offset)
+bool Elf_reader::Load(std::vector<std::vector<uint32_t>> &cmds,
+                      std::vector<uint32_t> &seg_va,
+                      uint32_t &offset)
 {
-    for (; cur_phdr_ < phdrnum_; ++cur_phdr_)
+    for (int i = 0; cur_phdr_ < phdrnum_; ++cur_phdr_, ++i)
     {
         GElf_Phdr *gres = gelf_getphdr(e_, cur_phdr_, &phdr_);
         if (gres != &phdr_)
             print_and_exit("Elf: gelf_getphdr() failed %s\n", elf_errmsg(-1));
 
-        if (phdr_.p_type != PT_LOAD)
-            continue;
-
+        // if (phdr_.p_type != PT_LOAD)
+        //    continue;
+        cmds.resize(i + 1);
         long int off = phdr_.p_offset;
         if (off != lseek(fd_, off, SEEK_SET))
             print_and_exit("Elf: lseek failed\n");
@@ -64,13 +66,11 @@ bool Elf_reader::Load(std::vector<uint32_t> &cmds, uint32_t &va, uint32_t &offse
         int read_sz = read(fd_, &(buf[0]), phdr_.p_filesz);
         if (read_sz < 0 || phdr_.p_filesz != static_cast<uint32_t>(read_sz))
             print_and_exit("Elf: segment reading failed\n");
-        ++cur_phdr_;
-        std::swap(cmds, buf);
-        va = phdr_.p_vaddr;
-        offset = entry_;   //- va;   // phdr_.p_vaddr;
-        return true;
+        std::swap(cmds[i], buf);
+        seg_va.push_back(phdr_.p_vaddr);
     }
-    return false;
+    offset = entry_;
+    return true;
 }
 
 void Elf_reader::Clear()

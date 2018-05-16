@@ -31,8 +31,8 @@ public:
         return Init(filename.c_str());
     }
     void Clear();
-    bool Load(std::vector<uint32_t> &cmds /* out */,
-              uint32_t &va /* out */,
+    bool Load(std::vector<std::vector<uint32_t>> &cmds /* out */,
+              std::vector<uint32_t> &seg_va /* out */,
               uint32_t &offset /* out */);
     Elf_reader &operator=(const Elf_reader &) = delete;
     ~Elf_reader();

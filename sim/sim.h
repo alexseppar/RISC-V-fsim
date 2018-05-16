@@ -36,7 +36,9 @@ public:
         regs_.fill(0u);
     }
 #endif
-    State(const std::vector<uint32_t> commands, uint32_t va, uint32_t pc)
+    State(const std::vector<std::vector<uint32_t>> &commands,
+          const std::vector<uint32_t> &seg_va,
+          uint32_t pc)
         : pc_(pc)
         , executed_insts_(0)
         , pmem_(new uint8_t[pmem_size_]())
@@ -45,7 +47,16 @@ public:
         regs_.fill(0u);
         regs_[2] = pmem_size_ - 2 * 4096;
         // put segment in pmem_ (pa = va)
-        memcpy(pmem_ + va, commands.data(), commands.size() * 4);
+        int i = 0;
+        for (auto va : seg_va)
+        {
+            memcpy(pmem_ + va, commands[i].data(), commands[i].size() * 4);
+            ++i;
+        }
+    }
+    ~State()
+    {
+        delete[] pmem_;
     }
     uint32_t GetReg(ir::Reg reg) const
     {
@@ -165,7 +176,9 @@ private:
 
 public:
     Sim(const std::vector<uint32_t> &commands);
-    Sim(const std::vector<uint32_t> &commands, uint32_t va, uint32_t pc);
+    Sim(const std::vector<std::vector<uint32_t>> &commands,
+        const std::vector<uint32_t> &seg_va,
+        uint32_t pc);
     Sim(const Sim &rhs) = delete;
     Sim &operator=(const Sim &rhs) = delete;
     void Execute();

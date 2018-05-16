@@ -33,6 +33,13 @@ void ExecDummy(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *s
     NEXT_INST();
 }
 
+void ExecECALL([[maybe_unused]] const ir::Inst *fst_inst,
+               [[maybe_unused]] const ir::Inst *cur_inst,
+               [[maybe_unused]] sim::State *state)
+{
+    throw SimException("Finished!");
+}
+
 void ExecLB(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
     uint32_t val = state->Read(RS1 + IMM, 1);
