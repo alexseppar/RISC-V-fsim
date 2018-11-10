@@ -72,6 +72,7 @@ enum class Opcode : uint8_t
     SYSTEM,
     AUIPC,
     LUI,
+    MSCMEM,
     // stub opcode
     UNDEFINED
 };
@@ -128,6 +129,7 @@ enum class Cmd : uint8_t
     SRET,
     MRET,
     WFI,
+    FENCE,
     CSRRW,
     CSRRS,
     CSRRC,

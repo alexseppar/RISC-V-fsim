@@ -57,6 +57,12 @@ public:
 
     ~MMU() {}
 
+    void Flush()
+    {
+        instTLB_.Clear();
+        dataTLB_.Clear();
+    }
+
     uint64_t Translate(uint32_t va, AccessType acc)
     {
         if (satp_ >> 31 == 0)
@@ -70,21 +76,21 @@ public:
         while (1)
         {
             pte = reinterpret_cast<uint32_t *>(pmem_ + table_pa +
-                                               ptesize_ * (i ? va >> 22 : (va << 10) >> 22));
+                                               ptesize_ * (i ? va >> 22 : ((va << 10) >> 22)));
 
-            if ((*pte & 1) == 0 || ((*pte & 2) == 0 && (*pte & 4) == 1))
+            if ((*pte & 1) == 0 || ((*pte & 2) == 0 && (*pte & 4) == 4))
             {
-                // page-fault
+                throw SimException("page fault valid or R W");
             }
 
-            if ((*pte & 2) == 1 || (*pte & 8) == 1)
+            if ((*pte & 2) != 0 || (*pte & 8) != 0)
             {
                 break;
             }
 
             if (--i < 0)
             {
-                // page-fault
+                throw SimException("page fault i < 0");
             }
             else
             {
@@ -96,12 +102,12 @@ public:
         if ((acc == READ && (*pte & 2) == 0) || (acc == WRITE && (*pte & 4) == 0) ||
             (acc == EXEC && (*pte & 8) == 0))
         {
-            // access. page-fault
+            throw SimException("page fault");
         }
 
-        if (i > 0 && *pte >> 10 != 0)
+        if (i > 0 && ((*pte >> 10) & 0x3ff) != 0)
         {
-            // misaligned. page-fault
+            throw SimException("page fault");
         }
 
         // Access bit

@@ -17,8 +17,6 @@ void State::Dump(FILE *f) const
 // Trace
 Trace::Trace(const Decoder &decoder, State &state)
 {
-    // TODO: in future, fetch of instructions should be done through MMU, and this process
-    // can cause faults; now we simply read array of hard-coded instructions
     uint32_t address = state.GetPC();
     while (true)
     {
@@ -26,7 +24,7 @@ Trace::Trace(const Decoder &decoder, State &state)
         trace_.push_back(inst);
         isa::Opcode opcode = isa::GetCmdDesc(trace_.back().GetCmd()).opcode;
         if (opcode == isa::Opcode::BRANCH || opcode == isa::Opcode::JALR ||
-            opcode == isa::Opcode::JAL)
+            opcode == isa::Opcode::JAL || inst.GetCmd() == isa::Cmd::FENCE)
             break;
         address += 4;
     }
@@ -56,19 +54,10 @@ void TraceCache::Dump(FILE *f) const
 }
 
 // Sim
-#if 0
-Sim::Sim(const std::vector<uint32_t> &commands)
-    : trace_cache_(options::cache_size)
-    , state_(commands)
-{
-}
-#endif
-
 Sim::Sim(const std::vector<std::vector<uint32_t>> &commands,
          const std::vector<uint32_t> &seg_va,
          uint32_t pc)
-    : trace_cache_(options::cache_size)
-    , state_(commands, seg_va, pc)
+    : state_(commands, seg_va, pc)
 {
 }
 
@@ -80,7 +69,7 @@ void Sim::Execute()
     {
         while (true)
         {
-            trace_cache_.Refer(decoder_, state_).Execute(&state_);
+            state_.trace_cache.Refer(decoder_, state_, state_.GetPC()).Execute(&state_);
             if (state_.GetExecutedInsts() >= options::max_insts)
                 break;
         }
@@ -96,7 +85,7 @@ void Sim::Execute()
     uint64_t time = timer.GetMilliseconds();
     fprintf(options::log, "Number of instructions executed: %lu, time: %lu ms, MIPS: %.3lf\n",
             exec_insts, time, (double)exec_insts / (time * 1000));
-    fprintf(options::log, "Trace cache: hits: %lu, misses: %lu\n", trace_cache_.GetHits(),
-            trace_cache_.GetMisses());
+    fprintf(options::log, "Trace cache: hits: %lu, misses: %lu\n",
+            state_.trace_cache.GetHits(), state_.trace_cache.GetMisses());
 }
 }   // namespace sim

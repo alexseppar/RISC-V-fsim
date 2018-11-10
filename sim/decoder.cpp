@@ -150,6 +150,14 @@ ir::Inst Decoder::Decode(uint32_t command) const
                 throw SimException("SRLI/SRAI: incorrect immediate");
             }
         }
+        // FENCE instruction
+        if (cmd == isa::Cmd::FENCE)
+        {
+            if (imm != 0x0ff || fmt.rs1 || fmt.rd)
+            {
+                throw SimException("FENCE: incorrect imm/rs1/rd");
+            }
+        }
         // ECALL, EBREAK, URET, MRET, SRET, WFI instructions
         else if ((uint8_t)cmd >= (uint8_t)isa::Cmd::ECALL &&
                  (uint8_t)cmd <= (uint8_t)isa::Cmd::WFI)

@@ -16,7 +16,8 @@ const OpcodeDesc opcode_desc[] =
     {0b01100, CmdFormat::R}, // OP
     {0b11100, CmdFormat::I}, // SYSTEM
     {0b00101, CmdFormat::U}, // AUIPC
-    {0b01101, CmdFormat::U}  // LUI
+    {0b01101, CmdFormat::U}, // LUI
+    {0b00011, CmdFormat::I}  // MSCMEM
 };
 
 const CmdDesc cmd_desc[] =
@@ -64,7 +65,8 @@ const CmdDesc cmd_desc[] =
     {"SRET",   &ExecDummy, Opcode::SYSTEM, 0b000},
     {"MRET",   &ExecDummy, Opcode::SYSTEM, 0b000},
     {"WFI",    &ExecDummy, Opcode::SYSTEM, 0b000},
-    {"CSRRW",  &ExecDummy, Opcode::SYSTEM, 0b001},
+    {"FENCE",  &ExecFENCE, Opcode::MSCMEM, 0b000},
+    {"CSRRW",  &ExecCSRRW, Opcode::SYSTEM, 0b001},
     {"CSRRS",  &ExecDummy, Opcode::SYSTEM, 0b010},
     {"CSRRC",  &ExecDummy, Opcode::SYSTEM, 0b011},
     {"CSRRWI", &ExecDummy, Opcode::SYSTEM, 0b101},

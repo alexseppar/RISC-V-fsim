@@ -14,11 +14,11 @@
 #define GET_PC() (state->GetPC())
 #define SET_PC(x) (state->SetPC(x))
 #define RD(x) (state->SetReg(cur_inst->GetRd(), (x)))
-#define NEXT_INST()                            \
-    {                                          \
-        if (options::verbose)                  \
-            cur_inst->Dump(options::log);      \
-        (cur_inst + 1)->Exec(fst_inst, state); \
+#define NEXT_INST()                                   \
+    {                                                 \
+        if (options::verbose)                         \
+            cur_inst->Dump(options::log);             \
+        return (cur_inst + 1)->Exec(fst_inst, state); \
     }
 #define END_TRACE()                                       \
     {                                                     \
@@ -38,6 +38,13 @@ void ExecECALL([[maybe_unused]] const ir::Inst *fst_inst,
                [[maybe_unused]] sim::State *state)
 {
     throw SimException("Finished!");
+}
+
+void ExecFENCE(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
+{
+    state->Flush();
+    SET_PC(GET_PC() + (cur_inst - fst_inst + 1) * 4);
+    END_TRACE();
 }
 
 void ExecLB(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
@@ -285,6 +292,15 @@ void ExecOR(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *stat
 void ExecAND(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
     RD(RS1 & RS2);
+    NEXT_INST();
+}
+
+void ExecCSRRW(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
+{
+    if (IMM != 0x180)
+        throw SimException("Not satp sysreg is not supported");
+    RD(state->satp);
+    state->satp = RS1;
     NEXT_INST();
 }
 

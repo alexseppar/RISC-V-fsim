@@ -1,6 +1,7 @@
 #ifndef IR_H
 #define IR_H
 
+#include "exec_inst.h"
 #include "isa_desc.h"
 #include <cassert>
 #include <cstdio>
@@ -49,6 +50,7 @@ private:
     Imm imm_;
     Reg rs1_, rs2_, rd_;
     isa::Cmd cmd_;
+    ExecFunc func;
 
 public:
     Inst(isa::Cmd cmd, Reg rd, Reg rs1, Reg rs2, Imm imm)
@@ -58,6 +60,7 @@ public:
         , rd_(rd)
         , cmd_(cmd)
     {
+        func = isa::GetCmdDesc(cmd_).exec_func;
     }
     Imm GetImm() const
     {
@@ -96,7 +99,8 @@ public:
     void Dump(FILE *f) const;
     void Exec(const ir::Inst *fst_inst, sim::State *state) const
     {
-        (*isa::GetCmdDesc(cmd_).exec_func)(fst_inst, this, state);
+        //(*isa::GetCmdDesc(cmd_).exec_func)(fst_inst, this, state);
+        func(fst_inst, this, state);
     }
 };
 

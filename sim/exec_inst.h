@@ -16,6 +16,7 @@ typedef void (*ExecFunc)(const ir::Inst *, const ir::Inst *, sim::State *);
 void ExecDummy(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 
 void ExecECALL(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+void ExecFENCE(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 void ExecLB(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 void ExecLW(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 void ExecLH(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
@@ -57,6 +58,8 @@ void ExecSRL(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *sta
 void ExecSRA(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 void ExecOR(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 void ExecAND(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
+
+void ExecCSRRW(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
 
 // RV32M standard extension
 void ExecMUL(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state);
