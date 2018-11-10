@@ -113,15 +113,15 @@ public:
     }
     void SetReg(ir::Reg reg, uint32_t val)
     {
-        // assert(reg < 32 && "Invalid register number");
+        assert(reg < 32 && "Invalid register number");
         if (reg)
         {
-            // if (options::verbose)
-            // {
-            //     fprintf(options::log, "\t");
-            //     reg.Dump(options::log);
-            //     fprintf(options::log, ": 0x%08X => 0x%08X\n", regs_[reg], val);
-            // }
+            if (options::verbose)
+            {
+                fprintf(options::log, "\t");
+                reg.Dump(options::log);
+                fprintf(options::log, ": 0x%08X => 0x%08X\n", regs_[reg], val);
+            }
             regs_[reg] = val;
         }
     }

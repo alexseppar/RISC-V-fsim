@@ -299,8 +299,7 @@ void ExecCSRRW(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *s
 {
     if (IMM != 0x180)
         throw SimException("Not satp sysreg is not supported");
-    RD(state->satp);
-    state->satp = RS1;
+    state->satp |= RS1 & 0x80000000ul;
     NEXT_INST();
 }
 
