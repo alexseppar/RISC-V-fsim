@@ -20,7 +20,7 @@ Trace::Trace(const Decoder &decoder, State &state)
     uint32_t address = state.GetPC();
     while (true)
     {
-        ir::Inst inst = decoder.Decode(state.GetCmd(address));   // / 4));
+        ir::Inst inst = decoder.Decode(state.GetCmd(address));
         trace_.push_back(inst);
         isa::Opcode opcode = isa::GetCmdDesc(trace_.back().GetCmd()).opcode;
         if (opcode == isa::Opcode::BRANCH || opcode == isa::Opcode::JALR ||

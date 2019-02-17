@@ -123,4 +123,11 @@ private:
     size_t max_size_, cur_size_;
 };
 
+template<typename... Args>
+void log(Args... args)
+{
+    if (options::verbose)
+        fprintf(options::log, args...);
+}
+
 #endif

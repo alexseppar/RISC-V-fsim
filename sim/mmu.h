@@ -2,6 +2,7 @@
 #define MMU_H
 
 #include "common.h"
+#include <memory>
 
 class MMU
 {
@@ -32,10 +33,6 @@ private:
         }
     };
 
-    const uint32_t pagesize_ = 4096u;
-    const uint32_t ppn2_ = 24;
-    const uint8_t levels_ = 2u;
-    const uint8_t ptesize_ = 4u;
     LRUCache<uint32_t, PhysAddr> instTLB_;
     LRUCache<uint32_t, PhysAddr> dataTLB_;
     uint8_t *pmem_;
@@ -43,6 +40,11 @@ private:
     uint32_t &satp_;
 
 public:
+    static constexpr uint32_t pagesize = 4096u;
+    static constexpr uint32_t ppn2 = 24;
+    static constexpr uint8_t levels = 2;
+    static constexpr uint8_t ptesize = 4;
+
     MMU(uint8_t *pmem, uint64_t pmem_size, uint32_t &satp)
         : instTLB_(256)
         , dataTLB_(256)
@@ -69,14 +71,14 @@ public:
         {
             return va;
         }
-        uint64_t table_pa = (satp_ & 0x3fffff) * pagesize_;
-        int8_t i = levels_ - 1;
+        uint64_t table_pa = (satp_ & 0x3fffff) * pagesize;
+        int8_t i = levels - 1;
         uint32_t *pte;
 
         while (1)
         {
             pte = reinterpret_cast<uint32_t *>(pmem_ + table_pa +
-                                               ptesize_ * (i ? va >> 22 : ((va << 10) >> 22)));
+                                               ptesize * (i ? va >> 22 : ((va << 10) >> 22)));
 
             if ((*pte & 1) == 0 || ((*pte & 2) == 0 && (*pte & 4) == 4))
             {
@@ -94,7 +96,7 @@ public:
             }
             else
             {
-                table_pa = (*pte >> 10) * pagesize_;
+                table_pa = (*pte >> 10) * pagesize;
                 continue;
             }
         }

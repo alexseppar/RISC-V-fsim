@@ -24,7 +24,7 @@ void ParseOptions(int argc, char *argv[])
     int cur_arg = 1;
     while (cur_arg < argc)
     {
-        if (!strcmp("--help", argv[cur_arg]))
+        if (!strcmp("-help", argv[cur_arg]))
         {
             printf("Sim options:\n");
             PrintHelp();

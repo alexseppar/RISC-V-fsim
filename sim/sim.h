@@ -3,12 +3,14 @@
 
 #include "common.h"
 #include "decoder.h"
+#include "jit.h"
 #include "mmu.h"
 #include <algorithm>
 #include <array>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <memory>
 #include <vector>
 
 namespace sim
@@ -18,15 +20,34 @@ class State;
 class Trace
 {
 private:
+    using ExecTraceType = std::unique_ptr<Jit::ExecTrace, Jit::ExecTraceDeleter>;
     std::vector<ir::Inst> trace_;
+    mutable ExecTraceType exec_trace_;
+    mutable uint64_t exec_num_ = 0;
+    mutable bool is_eligible_ = true;
 
 public:
     Trace(const Decoder &decoder, State &state);
     void Execute(State *state) const
     {
-        if (options::verbose)
-            fprintf(options::log, "Executing trace:\n");
-        trace_.data()->Exec(trace_.data(), state);
+        if (options::jit && is_eligible_ && !exec_trace_ &&
+            options::jit_threshold == exec_num_++)
+        {
+            log("Attempt to translate trace...\n");
+            exec_trace_ = ExecTraceType(Jit::TranslateTrace(trace_));
+            if (!exec_trace_)
+            {
+                is_eligible_ = false;
+                log("Fail\n");
+            }
+            else
+                log("Success\n");
+        }
+        log("Executing trace...\n");
+        if (exec_trace_)
+            (*exec_trace_)(state);
+        else
+            trace_.data()->Exec(trace_.data(), state);
     }
     void Dump(FILE *f) const;
 };
@@ -74,9 +95,8 @@ private:
     std::array<uint32_t, 32> regs_;
     uint32_t pc_;
     uint64_t executed_insts_;
-    // TODO: system registers, MMU
-    // std::vector<uint32_t> commands_;   // use MMU in future
-    uint64_t pmem_size_ = 25 * 4096;
+    // TODO: system registers
+    const uint64_t pmem_size_ = options::mem_pages * MMU::pagesize;
     uint8_t *pmem_;
     MMU mmu_;
 
@@ -93,7 +113,7 @@ public:
         , trace_cache(options::cache_size)
     {
         regs_.fill(0u);
-        regs_[2] = pmem_size_ - 2 * 4096;
+        regs_[2] = pmem_size_ - 2 * MMU::pagesize;
         // put segment in pmem_ (pa = va)
         int i = 0;
         for (auto va : seg_va)
@@ -132,8 +152,7 @@ public:
     }
     void SetPC(uint32_t pc)
     {
-        if (options::verbose)
-            fprintf(options::log, "\tPC: 0x%08X => 0x%08X\n", pc_, pc);
+        log("\tPC: 0x%08X => 0x%08X\n", pc_, pc);
         pc_ = pc;
     }
 
@@ -154,9 +173,8 @@ public:
 
     void Write(uint32_t va, uint8_t nbytes, uint32_t data)
     {
-        if (options::verbose)
-            fprintf(options::log, "\tM: 0x%08X <= 0x%08X\n", va,
-                    nbytes == 4 ? data : data & ((1 << (8 * nbytes)) - 1));
+        log("\tM: 0x%08X <= 0x%08X\n", va,
+            nbytes == 4 ? data : data & ((1 << (8 * nbytes)) - 1));
         mmu_.Store(va, nbytes, data);
     }
 
