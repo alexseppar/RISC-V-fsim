@@ -17,10 +17,11 @@ set(SIM_SRC
     ${SIM_DIR}/jit.cpp
     ${SIM_DIR}/main.cpp
     ${SIM_DIR}/options.cpp
-    ${SIM_DIR}/sim.cpp)
+    ${SIM_DIR}/sim.cpp
+    ${SIM_DIR}/syscall.cpp)
 
 set_source_files_properties(${SIM_SRC} PROPERTIES COMPILE_FLAGS
-    "-std=c++14 -Wall -Wextra -Wno-packed-bitfield-compat")
+    "-std=c++17 -Wall -Wextra -Wno-packed-bitfield-compat")
 
 add_subdirectory(asmjit)
 add_executable(riscvsim "${SIM_SRC}")

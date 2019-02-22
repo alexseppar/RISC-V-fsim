@@ -70,7 +70,7 @@ void Sim::Execute()
         while (true)
         {
             state_.trace_cache.Refer(decoder_, state_, state_.GetPC()).Execute(&state_);
-            if (state_.GetExecutedInsts() >= options::max_insts)
+            if (options::max_insts && state_.GetExecutedInsts() >= options::max_insts)
                 break;
         }
     }

@@ -1,6 +1,7 @@
 #include "exec_inst.h"
 #include "common.h"
 #include "sim.h"
+#include "syscall.h"
 #include <cstdint>
 #include <cstdio>
 
@@ -35,9 +36,11 @@ void ExecDummy(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *s
 
 void ExecECALL([[maybe_unused]] const ir::Inst *fst_inst,
                [[maybe_unused]] const ir::Inst *cur_inst,
-               [[maybe_unused]] sim::State *state)
+               sim::State *state)
 {
-    throw SimException("Finished!");
+    const uint32_t a7 = state->GetReg(ir::Reg(17));
+    syscall::ExecSysCall(state, static_cast<syscall::SysCall>(a7));
+    NEXT_INST();
 }
 
 void ExecFENCE(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)

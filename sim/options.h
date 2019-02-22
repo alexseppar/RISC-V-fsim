@@ -9,41 +9,29 @@
 namespace options
 {
 template<typename T>
-std::enable_if_t<std::is_same<T, bool>::value, T> ParseArg(int &cur_arg
-                                                           __attribute__((unused)),
-                                                           int num_arg __attribute__((unused)),
-                                                           char *argv[]
-                                                           __attribute__((unused)))
+T ParseArg(int &cur_arg, int num_arg, char *argv[])
 {
-    return true;
-}
+    if constexpr (std::is_same_v<T, bool>)
+        return true;
 
-template<typename T>
-std::enable_if_t<std::is_same<std::remove_const_t<T>, char *>::value, T> ParseArg(int &cur_arg,
-                                                                                  int num_arg,
-                                                                                  char *argv[])
-{
-    if (cur_arg < num_arg)
-        return argv[cur_arg++];
-    else
+    if (cur_arg >= num_arg)
         throw std::invalid_argument("the required option is not specified");
-}
 
-template<typename T>
-std::enable_if_t<std::is_unsigned<T>::value && !std::is_same<T, bool>::value, T>
-ParseArg(int &cur_arg, int num_arg, char *argv[])
-{
-    if (cur_arg < num_arg)
+    if constexpr (std::is_unsigned_v<T>)
+    {
         try
         {
             return std::stoull(std::string(argv[cur_arg++]));
         }
         catch (std::invalid_argument &e)
         {
-            throw std::invalid_argument(argv[cur_arg - 1]);
+            throw std::invalid_argument(argv[cur_arg]);
         }
+    }
+    else if constexpr (std::is_same_v<T, char *>)
+        return argv[cur_arg++];
     else
-        throw std::invalid_argument("the required option is not specified");
+        static_assert("Unsupported type");
 }
 
 template<typename T>
@@ -88,10 +76,19 @@ public:
     }
     void PrintHelp()
     {
+        printf("%s ", opt_name_);
         if (arg_name_)
-            printf("%s [%s] - %s\n", opt_name_, arg_name_, opt_desc_);
+            printf("[%s] ", arg_name_);
+        printf("(value = ");
+        if constexpr (std::is_same_v<T, bool>)
+            printf("%s", data_ ? "true" : "false");
+        else if constexpr (std::is_unsigned_v<T>)
+            printf("%llu", static_cast<unsigned long long>(data_));
+        else if constexpr (std::is_same_v<T, char *>)
+            printf("%s", data_ ? data_ : "<empty>");
         else
-            printf("%s - %s\n", opt_name_, opt_desc_);
+            static_assert("Unsupported type");
+        printf(") - %s\n", opt_desc_);
     }
 };
 

@@ -118,6 +118,8 @@ public:
         int i = 0;
         for (auto va : seg_va)
         {
+            if (va + commands[i].size() * 4 > pmem_size_)
+                throw SimException("Not enough memory to load segment");
             memcpy(pmem_ + va, commands[i].data(), commands[i].size() * 4);
             ++i;
         }
