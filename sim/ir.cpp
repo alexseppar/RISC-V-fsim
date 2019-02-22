@@ -29,8 +29,7 @@ void Inst::Dump(FILE *f) const
         rd_.Dump(f);
         break;
     case isa::CmdFormat::I:
-        if ((uint8_t)cmd_ >= (uint8_t)isa::Cmd::ECALL &&
-            (uint8_t)cmd_ <= (uint8_t)isa::Cmd::WFI)
+        if ((uint8_t)cmd_ >= (uint8_t)isa::Cmd::ECALL && (uint8_t)cmd_ <= (uint8_t)isa::Cmd::WFI)
             break;
         if ((uint8_t)cmd_ >= (uint8_t)isa::Cmd::CSRRWI &&
             (uint8_t)cmd_ <= (uint8_t)isa::Cmd::CSRRCI)

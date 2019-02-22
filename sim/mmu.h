@@ -17,26 +17,24 @@ private:
     struct PhysAddr
     {
     private:
-        MMU &mmu_;
         uint64_t pa_;
 
     public:
-        PhysAddr(MMU &mmu, uint32_t va, AccessType type)
-            : mmu_(mmu)
-            , pa_(mmu_.Translate(va, type))
+        PhysAddr(const MMU &mmu, uint32_t va, AccessType type)
+            : pa_(mmu.Translate(va, type))
         {
         }
 
-        inline uint64_t GetPA() const
+        operator uint64_t() const
         {
             return pa_;
         }
     };
 
-    LRUCache<uint32_t, PhysAddr> instTLB_;
-    LRUCache<uint32_t, PhysAddr> dataTLB_;
-    uint8_t *pmem_;
+    mutable LRUCache<uint32_t, PhysAddr> instTLB_;
+    mutable LRUCache<uint32_t, PhysAddr> dataTLB_;
     uint64_t pmem_size_;
+    std::unique_ptr<uint8_t[]> pmem_;
     uint32_t &satp_;
 
 public:
@@ -45,11 +43,11 @@ public:
     static constexpr uint8_t levels = 2;
     static constexpr uint8_t ptesize = 4;
 
-    MMU(uint8_t *pmem, uint64_t pmem_size, uint32_t &satp)
-        : instTLB_(256)
-        , dataTLB_(256)
-        , pmem_(pmem)
-        , pmem_size_(pmem_size)
+    MMU(uint32_t &satp)
+        : instTLB_(options::itlb_size)
+        , dataTLB_(options::dtlb_size)
+        , pmem_size_(options::mem_pages * MMU::pagesize)
+        , pmem_(new uint8_t[pmem_size_])
         , satp_(satp)
     {
     }
@@ -65,7 +63,20 @@ public:
         dataTLB_.Clear();
     }
 
-    uint64_t Translate(uint32_t va, AccessType acc)
+    uint64_t GetMemSize() const
+    {
+        return pmem_size_;
+    }
+
+    template<typename T>
+    T *GetMemPtr(uint32_t pa) const
+    {
+        if (pa + sizeof(T) >= pmem_size_)
+            throw SimException("Address is out of memory");
+        return reinterpret_cast<T *>(pmem_.get() + pa);
+    }
+
+    uint64_t Translate(uint32_t va, AccessType acc) const
     {
         if (satp_ >> 31 == 0)
         {
@@ -77,8 +88,7 @@ public:
 
         while (1)
         {
-            pte = reinterpret_cast<uint32_t *>(pmem_ + table_pa +
-                                               ptesize * (i ? va >> 22 : ((va << 10) >> 22)));
+            pte = GetMemPtr<uint32_t>(table_pa + ptesize * (i ? va >> 22 : ((va << 10) >> 22)));
 
             if ((*pte & 1) == 0 || ((*pte & 2) == 0 && (*pte & 4) == 4))
             {
@@ -122,8 +132,7 @@ public:
         }
 
         uint64_t pa = static_cast<uint64_t>(*pte) << 2;
-        return (i ? (va & 0x003fffff) | (pa & (~1ull << 22))
-                  : (va & 0xfff) | (pa & (~1ull << 12)));
+        return (i ? (va & 0x003fffff) | (pa & (~1ull << 22)) : (va & 0xfff) | (pa & (~1ull << 12)));
     }
 
     uint32_t Load(uint32_t va, uint8_t nbytes, bool instRead = true)
@@ -138,10 +147,9 @@ public:
         {
             auto res = instRead ? instTLB_.Insert(va, *this, va, MMU::AccessType::EXEC)
                                 : dataTLB_.Insert(va, *this, va, MMU::AccessType::READ);
-            pa = res.first.GetPA();
+            pa = res.first;
         }
-        return (*reinterpret_cast<uint32_t *>(pmem_ + pa)) &
-               (nbytes == 4 ? 0xffffffff : ((1 << (8 * nbytes)) - 1));
+        return (*GetMemPtr<uint32_t>(pa)) & (nbytes == 4 ? 0xffffffff : ((1 << (8 * nbytes)) - 1));
     }
 
     void Store(uint32_t va, uint8_t nbytes, uint32_t data)
@@ -155,10 +163,9 @@ public:
         else
         {
             auto res = dataTLB_.Insert(va, *this, va, MMU::AccessType::WRITE);
-            pa = res.first.GetPA();
+            pa = res.first;
         }
-        *reinterpret_cast<uint32_t *>(pmem_ + pa) =
-            data & (nbytes == 4 ? 0xffffffff : ((1 << (8 * nbytes)) - 1));
+        *GetMemPtr<uint32_t>(pa) = data & (nbytes == 4 ? 0xffffffff : ((1 << (8 * nbytes)) - 1));
     }
 };
 

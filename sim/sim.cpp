@@ -85,7 +85,7 @@ void Sim::Execute()
     uint64_t time = timer.GetMilliseconds();
     fprintf(options::log, "Number of instructions executed: %lu, time: %lu ms, MIPS: %.3lf\n",
             exec_insts, time, (double)exec_insts / (time * 1000));
-    fprintf(options::log, "Trace cache: hits: %lu, misses: %lu\n",
-            state_.trace_cache.GetHits(), state_.trace_cache.GetMisses());
+    fprintf(options::log, "Trace cache: hits: %lu, misses: %lu\n", state_.trace_cache.GetHits(),
+            state_.trace_cache.GetMisses());
 }
 }   // namespace sim

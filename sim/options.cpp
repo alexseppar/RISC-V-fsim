@@ -36,8 +36,7 @@ void ParseOptions(int argc, char *argv[])
 #undef OPTION_DEF
         else
         {
-            throw std::invalid_argument(std::string("Unrecognized argument: ") +
-                                        argv[cur_arg]);
+            throw std::invalid_argument(std::string("Unrecognized argument: ") + argv[cur_arg]);
         }
     }
 }

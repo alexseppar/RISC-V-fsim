@@ -159,8 +159,7 @@ ir::Inst Decoder::Decode(uint32_t command) const
             }
         }
         // ECALL, EBREAK, URET, MRET, SRET, WFI instructions
-        else if ((uint8_t)cmd >= (uint8_t)isa::Cmd::ECALL &&
-                 (uint8_t)cmd <= (uint8_t)isa::Cmd::WFI)
+        else if ((uint8_t)cmd >= (uint8_t)isa::Cmd::ECALL && (uint8_t)cmd <= (uint8_t)isa::Cmd::WFI)
         {
             if (fmt.rs1 || fmt.rd)
             {

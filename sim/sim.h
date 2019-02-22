@@ -30,8 +30,7 @@ public:
     Trace(const Decoder &decoder, State &state);
     void Execute(State *state) const
     {
-        if (options::jit && is_eligible_ && !exec_trace_ &&
-            options::jit_threshold == exec_num_++)
+        if (options::jit && is_eligible_ && !exec_trace_ && options::jit_threshold == exec_num_++)
         {
             log("Attempt to translate trace...\n");
             exec_trace_ = ExecTraceType(Jit::TranslateTrace(trace_));
@@ -96,8 +95,6 @@ private:
     uint32_t pc_;
     uint64_t executed_insts_;
     // TODO: system registers
-    const uint64_t pmem_size_ = options::mem_pages * MMU::pagesize;
-    uint8_t *pmem_;
     MMU mmu_;
 
 public:
@@ -108,25 +105,20 @@ public:
           uint32_t pc)
         : pc_(pc)
         , executed_insts_(0)
-        , pmem_(new uint8_t[pmem_size_]())
-        , mmu_(pmem_, pmem_size_, satp)
+        , mmu_(satp)
         , trace_cache(options::cache_size)
     {
         regs_.fill(0u);
-        regs_[2] = pmem_size_ - 2 * MMU::pagesize;
+        regs_[2] = mmu_.GetMemSize() - 2 * MMU::pagesize;
         // put segment in pmem_ (pa = va)
         int i = 0;
         for (auto va : seg_va)
         {
-            if (va + commands[i].size() * 4 > pmem_size_)
+            if (va + commands[i].size() * 4 > mmu_.GetMemSize())
                 throw SimException("Not enough memory to load segment");
-            memcpy(pmem_ + va, commands[i].data(), commands[i].size() * 4);
+            memcpy(mmu_.GetMemPtr<uint8_t>(va), commands[i].data(), commands[i].size() * 4);
             ++i;
         }
-    }
-    ~State()
-    {
-        delete[] pmem_;
     }
     uint32_t GetReg(ir::Reg reg) const
     {
@@ -175,8 +167,7 @@ public:
 
     void Write(uint32_t va, uint8_t nbytes, uint32_t data)
     {
-        log("\tM: 0x%08X <= 0x%08X\n", va,
-            nbytes == 4 ? data : data & ((1 << (8 * nbytes)) - 1));
+        log("\tM: 0x%08X <= 0x%08X\n", va, nbytes == 4 ? data : data & ((1 << (8 * nbytes)) - 1));
         mmu_.Store(va, nbytes, data);
     }
 

@@ -4,6 +4,8 @@ OPTION_DEF(verbose,       bool,     false,   "-verbose",       nullptr,     "ena
 OPTION_DEF(log_file,      char *,   nullptr, "-log-file",      "filename",  "write excution output to file")
 OPTION_DEF(mem_pages,     size_t,   100,     "-mem-pages",     "pages num", "number of allocated pages")
 OPTION_DEF(cache_size,    size_t,   256,     "-cache-size",    "size",      "number of saved traces in LRU cache")
+OPTION_DEF(itlb_size,     size_t,   256,     "-itlb-size",     "size",      "number of instruction TLB entries")
+OPTION_DEF(dtlb_size,     size_t,   256,     "-dtlb-size",     "size",      "number of data TLB entries")
 OPTION_DEF(jit,           bool,     true,    "-jit",           nullptr,     "enable just-in-time translation")
 OPTION_DEF(jit_threshold, uint64_t, 1000,    "-jit-threshold", "exec num",  "number of trace executions when JIT is applied")
 OPTION_DEF(max_insts,     uint64_t, 1000000, "-max-insts",     "insts num", "number of instructions, after which simulator stops")
