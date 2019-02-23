@@ -30,7 +30,7 @@
 
 void ExecDummy(const ir::Inst *fst_inst, const ir::Inst *cur_inst, sim::State *state)
 {
-    fprintf(options::log, "This instruction is not implemented yet\n");
+    log("This instruction is not implemented yet\n");
     NEXT_INST();
 }
 
@@ -38,8 +38,7 @@ void ExecECALL([[maybe_unused]] const ir::Inst *fst_inst,
                [[maybe_unused]] const ir::Inst *cur_inst,
                sim::State *state)
 {
-    const uint32_t a7 = state->GetReg(ir::Reg(17));
-    syscall::ExecSysCall(state, static_cast<syscall::SysCall>(a7));
+    syscall::ExecSysCall(state, static_cast<syscall::SysCall>(state->GetReg(isa::Regs::a7)));
     NEXT_INST();
 }
 

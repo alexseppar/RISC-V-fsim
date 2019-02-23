@@ -20,6 +20,11 @@ public:
     {
         assert(reg_ < 32);
     }
+    Reg(isa::Regs reg)
+        : reg_(static_cast<uint8_t>(reg))
+    {
+        assert(reg_ < 32);
+    }
     operator uint8_t() const
     {
         return reg_;
