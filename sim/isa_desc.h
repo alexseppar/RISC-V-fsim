@@ -2,6 +2,7 @@
 #define ISA_DESC_H
 
 #include "exec_inst.h"
+#include "translate_inst.h"
 #include <cstdint>
 #include <cstdlib>
 
@@ -190,6 +191,7 @@ struct CmdDesc
 {
     const char *name;
     ExecFunc exec_func;
+    TranslateFunc translate_func;
     Opcode opcode;
     uint8_t funct3 = 0, funct7 = 0;
 };

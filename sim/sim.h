@@ -20,7 +20,7 @@ class State;
 class Trace
 {
 private:
-    using ExecTraceType = std::unique_ptr<Jit::ExecTrace, Jit::ExecTraceDeleter>;
+    using ExecTraceType = std::unique_ptr<jit::ExecTrace, jit::ExecTraceDeleter>;
     std::vector<ir::Inst> trace_;
     mutable ExecTraceType exec_trace_;
     mutable uint64_t exec_num_ = 0;
@@ -28,26 +28,7 @@ private:
 
 public:
     Trace(const Decoder &decoder, State &state);
-    void Execute(State *state) const
-    {
-        if (options::jit && is_eligible_ && !exec_trace_ && options::jit_threshold == exec_num_++)
-        {
-            log("Attempt to translate trace...\n");
-            exec_trace_ = ExecTraceType(Jit::TranslateTrace(trace_));
-            if (!exec_trace_)
-            {
-                is_eligible_ = false;
-                log("Fail\n");
-            }
-            else
-                log("Success\n");
-        }
-        log("Executing trace...\n");
-        if (exec_trace_)
-            (*exec_trace_)(state);
-        else
-            trace_.data()->Exec(trace_.data(), state);
-    }
+    void Execute(State *state) const;
     void Dump(FILE *f) const;
 };
 

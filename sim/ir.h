@@ -55,7 +55,7 @@ private:
     Imm imm_;
     Reg rs1_, rs2_, rd_;
     isa::Cmd cmd_;
-    ExecFunc func;
+    ExecFunc func_;
 
 public:
     Inst(isa::Cmd cmd, Reg rd, Reg rs1, Reg rs2, Imm imm)
@@ -64,28 +64,44 @@ public:
         , rs2_(rs2)
         , rd_(rd)
         , cmd_(cmd)
+        , func_(isa::GetCmdDesc(cmd_).exec_func)
     {
-        func = isa::GetCmdDesc(cmd_).exec_func;
+    }
+    bool IsImm() const
+    {
+        return GetCmdFormat() != isa::CmdFormat::R;
     }
     Imm GetImm() const
     {
-        assert(GetCmdFormat() != isa::CmdFormat::R);
+        assert(IsImm());
         return imm_;
+    }
+    bool IsRs1() const
+    {
+        return GetCmdFormat() != isa::CmdFormat::U && GetCmdFormat() != isa::CmdFormat::J;
     }
     Reg GetRs1() const
     {
-        assert(GetCmdFormat() != isa::CmdFormat::U && GetCmdFormat() != isa::CmdFormat::J);
+        assert(IsRs1());
         return rs1_;
+    }
+    bool IsRs2() const
+    {
+        return GetCmdFormat() != isa::CmdFormat::I && GetCmdFormat() != isa::CmdFormat::U &&
+               GetCmdFormat() != isa::CmdFormat::J;
     }
     Reg GetRs2() const
     {
-        assert(GetCmdFormat() != isa::CmdFormat::I && GetCmdFormat() != isa::CmdFormat::U &&
-               GetCmdFormat() != isa::CmdFormat::J);
+        assert(IsRs2());
         return rs2_;
+    }
+    bool IsRd() const
+    {
+        return GetCmdFormat() != isa::CmdFormat::S && GetCmdFormat() != isa::CmdFormat::B;
     }
     Reg GetRd() const
     {
-        assert(GetCmdFormat() != isa::CmdFormat::S && GetCmdFormat() != isa::CmdFormat::B);
+        assert(IsRd());
         return rd_;
     }
     isa::Cmd GetCmd() const
@@ -104,7 +120,11 @@ public:
     void Dump(FILE *f) const;
     void Exec(const ir::Inst *fst_inst, sim::State *state) const
     {
-        func(fst_inst, this, state);
+        func_(fst_inst, this, state);
+    }
+    bool Translate(jit::Translator &tr) const
+    {
+        return isa::GetCmdDesc(cmd_).translate_func(tr, this);
     }
 };
 

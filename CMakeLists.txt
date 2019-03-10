@@ -18,7 +18,8 @@ set(SIM_SRC
     ${SIM_DIR}/main.cpp
     ${SIM_DIR}/options.cpp
     ${SIM_DIR}/sim.cpp
-    ${SIM_DIR}/syscall.cpp)
+    ${SIM_DIR}/syscall.cpp
+    ${SIM_DIR}/translate_inst.cpp)
 
 set_source_files_properties(${SIM_SRC} PROPERTIES COMPILE_FLAGS
     "-std=c++17 -Wall -Wextra -Wno-packed-bitfield-compat")

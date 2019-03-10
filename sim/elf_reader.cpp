@@ -6,8 +6,8 @@ namespace elf
 template<typename... Args>
 static inline void print_and_exit(const char *msg, const Args &... args)
 {
-    fprintf(options::log, msg, args...);
-    exit(0);
+    log(msg, args...);
+    throw std::runtime_error("Elf reader failed");
 }
 
 void Elf_reader::Init(const char *filename)
